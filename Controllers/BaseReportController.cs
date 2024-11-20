@@ -7,7 +7,7 @@ using Nop.Web.Framework.Controllers;
 using Nop.Web.Framework.Models;
 using Nop.Web.Framework.Mvc.Filters;
 using System.Threading.Tasks;
-using ILogger = Nop.Services.Logging.ILogger;
+using ILogger = Nop.Services.Logging.ILogger; 
 
 namespace Nop.Plugin.Reports.CustomReports.Controllers
 {
