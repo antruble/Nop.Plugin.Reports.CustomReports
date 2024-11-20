@@ -1,0 +1,11 @@
+﻿{
+  "Group": "Reports",
+  "FriendlyName": "Custom reports",
+  "SystemName": "Reports.CustomReports",
+  "Version": "1.00",
+  "SupportedVersions": [ "4.50" ],
+  "Author": "Törös Dominik",
+  "DisplayOrder": 1,
+  "FileName": "Nop.Plugin.Reports.CustomReports.dll",
+  "Description": "Custom riportok."
+}
