@@ -49,3 +49,6 @@ A **CustomReports** plugin egy olyan bővítmény, amelyben új riportokat lehet
 
 ---
 
+## NopCommerce riport módosításának menete
+
+A `CustomReports.cs` `BiasDefaultNopReport(SiteMapNode reportMenuNode, string nopReportName, string newReportControllerName) ` függvényével át tudjuk irányítani az eredeti implementációról egy saját implementációra a riportokat.
