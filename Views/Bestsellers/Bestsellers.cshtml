@@ -138,7 +138,7 @@
                     @await Html.PartialAsync("Table", new DataTablesModel
                     {
                         Name = "salesreport-grid",
-                        UrlRead = new DataUrl("BestsellersList", "Report", null),
+                        UrlRead = new DataUrl("FetchReport", "BestSeller", null),
                         SearchButtonId = "search-salesreport",
                         Length = Model.PageSize,
                         LengthMenu = Model.AvailablePageSizes,
