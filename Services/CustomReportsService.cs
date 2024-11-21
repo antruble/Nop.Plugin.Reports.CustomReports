@@ -4,6 +4,7 @@ using Nop.Core.Domain.Customers;
 using Nop.Core.Domain.Discounts;
 using Nop.Core.Domain.Orders;
 using Nop.Core.Domain.Payments;
+using Nop.Core.Domain.Shipping;
 using Nop.Data;
 using Nop.Plugin.Reports.CustomReports.Models.CustomerReports.DiscountModels;
 using Nop.Plugin.Reports.CustomReports.Models.SearchModels;
@@ -36,6 +37,7 @@ namespace Nop.Plugin.Reports.CustomReports.Services
         private readonly IRepository<DiscountUsageHistory> _discountUsageHistoryRepository;
         private readonly IRepository<Discount> _discountRepository;
         private readonly IRepository<Order> _orderRepository;
+        private readonly IRepository<Shipment> _shipmentRepository;
 
         private readonly IWorkContext _workContext;
         private readonly ILogger _logger;
@@ -55,6 +57,7 @@ namespace Nop.Plugin.Reports.CustomReports.Services
                 IRepository<DiscountUsageHistory> discountUsageHistoryRepository,
                 IRepository<Discount> discountRepository,
                 IRepository<Order> orderRepository,
+                IRepository<Shipment> shipmentRepository,
 
                 IWorkContext workContext,
                 ILogger logger)
@@ -68,6 +71,7 @@ namespace Nop.Plugin.Reports.CustomReports.Services
             _discountUsageHistoryRepository = discountUsageHistoryRepository;
             _discountRepository = discountRepository;
             _orderRepository = orderRepository;
+            _shipmentRepository = shipmentRepository;
 
             _workContext = workContext;
             _logger = logger;
@@ -178,8 +182,16 @@ namespace Nop.Plugin.Reports.CustomReports.Services
         /// <returns>Az időszak alatt visszaküldött rendelések száma.</returns>
         public async Task<int> GetReturnedOrdersCountsAsync(DateTime? createdFromUtc, DateTime? createdToUtc)
         {
-            //TODO: Időszak alatt át „visszaérkezett”, azaz kiszállított, majd törölt státuszba átkerült csomagok száma.
-            return -1;
+            var query = from order in _orderRepository.Table
+                        join shipment in _shipmentRepository.Table on order.Id equals shipment.OrderId
+                        where order.OrderStatusId == 50 // Csak a törölt státuszú rendelések
+                              && shipment.DeliveryDateUtc != null // Csak a szállítással rendelkező rendelések
+                              && (!createdFromUtc.HasValue || shipment.DeliveryDateUtc >= createdFromUtc.Value)
+                              && (!createdToUtc.HasValue || shipment.DeliveryDateUtc <= createdToUtc.Value)
+                        select order.Id; // Csak az érintett rendelés ID-k
+
+            // Visszaadjuk az érintett rendelések számát
+            return await query.Distinct().CountAsync();
         }
 
         #endregion

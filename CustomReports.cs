@@ -177,7 +177,8 @@ namespace Nop.Plugin.Reports.CustomReports
                         new { SystemName = "Reports.CustomerReports.DailyOrders", Title = "DailyOrders", ControllerName = "DailyOrders", IconClass = "far fa-dot-circle" },
                         new { SystemName = "Reports.CustomerReports.Discounts", Title = "Discounts", ControllerName = "Discounts", IconClass = "far fa-dot-circle" },
                         new { SystemName = "Reports.CustomerReports.RegisteredCustomers", Title = "RegisteredCustomers", ControllerName = "RegisteredCustomers", IconClass = "far fa-dot-circle" },
-                        new { SystemName = "Reports.CustomerReports.ShoperiaPlusSubscriptions", Title = "ShoperiaPlusSubscriptions", ControllerName = "ShoperiaPlusSubscriptions", IconClass = "far fa-dot-circle" }
+                        new { SystemName = "Reports.CustomerReports.ShoperiaPlusSubscriptions", Title = "ShoperiaPlusSubscriptions", ControllerName = "ShoperiaPlusSubscriptions", IconClass = "far fa-dot-circle" },
+                        new { SystemName = "Reports.CustomerReports.ReturnedOrders", Title = "ReturnedOrders", ControllerName = "ReturnedOrders", IconClass = "far fa-dot-circle" }
                     }
                 },
                 //new
