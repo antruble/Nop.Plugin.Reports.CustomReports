@@ -16,6 +16,7 @@ A **CustomReports** plugin egy olyan bővítmény, amelyben új riportokat lehet
 
 ### 2. View létrehozása
 - `Views\(ReportGroupName)\ReportName` mappában létrehozzuk a riporthoz tartozó `ReportName` nézetet (egy létező riport nézetet átmásolunk és módosítjuk)
+- **A létrehozott view-nak a `Properties` menüjében átállítjuk a `Copy to Output Directory` beállítást `Copy always`-ra**
 - Létező view módosítása:
   - Viewhez tartozó `SearchModel`-t módosítjuk a riporthoz tartozó `ReportNameSearchModel`-re
   - Fejlécben szereplő beállításokat átírjuk az új riportnak megfelelően
