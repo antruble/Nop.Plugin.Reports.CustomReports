@@ -20,21 +20,25 @@ namespace Nop.Plugin.Reports.CustomReports.Controllers
         where TReportModel : BaseNopModel, new()
     {
         private readonly BaseReportFactory _baseReportFactory;
-        private readonly IReportsModelFactory _customReportsModelFactory;
+        private readonly IReportsModelFactory _reportsModelFactory;
         private readonly IPermissionService _permissionService;
         private readonly ILogger _logger;
         private readonly string _viewPath;
 
+        protected IPermissionService PermissionService => _permissionService;
+        protected IReportsModelFactory ReportsModelFactory => _reportsModelFactory;
+        protected ILogger Logger => _logger;
+
         protected BaseReportController(
             BaseReportFactory baseReportFactory,
 
-            IReportsModelFactory customReportsModelFactory,
+            IReportsModelFactory reportsModelFactory,
             IPermissionService permissionService,
             ILogger logger,
             string viewPath)
         {
             _baseReportFactory = baseReportFactory;
-            _customReportsModelFactory = customReportsModelFactory;
+            _reportsModelFactory = reportsModelFactory;
             _permissionService = permissionService;
             _logger = logger;
             _viewPath = viewPath;

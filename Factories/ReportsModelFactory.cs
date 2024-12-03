@@ -21,6 +21,7 @@ using Nop.Services.Localization;
 using Nop.Core.Domain.Catalog;
 using Nop.Web.Framework.Models.Extensions;
 using Nop.Plugin.Reports.CustomReports.Services;
+using Nop.Plugin.Reports.CustomReports.Models.OrderDetails;
 
 namespace Nop.Plugin.Reports.CustomReports.Factories.CustomerReports
 {
@@ -418,6 +419,18 @@ namespace Nop.Plugin.Reports.CustomReports.Factories.CustomerReports
 
             return problemasProductModels;
         }
+        #endregion
+
+        #region OrderDetails
+        public async Task<List<OrderDetailsReportModel>> FetchOrderDetailsDataAsync(OrderDetailsSearchModel searchModel)
+        {
+            if (searchModel == null)
+                throw new ArgumentNullException(nameof(searchModel));
+
+            var result = await _customReportService.GetOrderDetailsReportModelListByDateAsync(searchModel);
+            return result.ToList();
+        }
+
         #endregion
 
         #endregion

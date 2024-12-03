@@ -7,6 +7,7 @@ using Nop.Core.Domain.Payments;
 using Nop.Core.Domain.Shipping;
 using Nop.Data;
 using Nop.Plugin.Reports.CustomReports.Models.CustomerReports.DiscountModels;
+using Nop.Plugin.Reports.CustomReports.Models.OrderDetails;
 using Nop.Plugin.Reports.CustomReports.Models.SearchModels;
 using Nop.Services.Catalog;
 using Nop.Services.Helpers;
@@ -37,6 +38,8 @@ namespace Nop.Plugin.Reports.CustomReports.Services
         private readonly IRepository<DiscountUsageHistory> _discountUsageHistoryRepository;
         private readonly IRepository<Discount> _discountRepository;
         private readonly IRepository<Order> _orderRepository;
+        private readonly IRepository<OrderItem> _orderItemRepository;
+        private readonly IRepository<OrderNote> _orderNoteRepository;
         private readonly IRepository<Shipment> _shipmentRepository;
 
         private readonly IWorkContext _workContext;
@@ -57,6 +60,8 @@ namespace Nop.Plugin.Reports.CustomReports.Services
                 IRepository<DiscountUsageHistory> discountUsageHistoryRepository,
                 IRepository<Discount> discountRepository,
                 IRepository<Order> orderRepository,
+                IRepository<OrderItem> orderItemRepository,
+                IRepository<OrderNote> orderNoteRepository,
                 IRepository<Shipment> shipmentRepository,
 
                 IWorkContext workContext,
@@ -71,6 +76,8 @@ namespace Nop.Plugin.Reports.CustomReports.Services
             _discountUsageHistoryRepository = discountUsageHistoryRepository;
             _discountRepository = discountRepository;
             _orderRepository = orderRepository;
+            _orderItemRepository = orderItemRepository;
+            _orderNoteRepository = orderNoteRepository;
             _shipmentRepository = shipmentRepository;
 
             _workContext = workContext;
@@ -110,18 +117,20 @@ namespace Nop.Plugin.Reports.CustomReports.Services
         /// <returns>Lista a kupon típusokról, felhasználások számáról és a teljes kedvezmény összegéről.</returns>
         public async Task<IList<DiscountReportModel>> GetDiscountReportModelListByDateAsync(DateTime? createdFromUtc, DateTime? createdToUtc)
         {
-            // Lekérdezzük a DiscountUsageHistory és Order adatokat, majd csoportosítjuk a DiscountTypeId alapján
             var query = from duh in _discountUsageHistoryRepository.Table
                         join o in _orderRepository.Table on duh.OrderId equals o.Id
                         join d in _discountRepository.Table on duh.DiscountId equals d.Id
+                        join oi in _orderItemRepository.Table on duh.OrderId equals oi.OrderId
                         where (!createdFromUtc.HasValue || duh.CreatedOnUtc >= createdFromUtc.Value) &&
                               (!createdToUtc.HasValue || duh.CreatedOnUtc <= createdToUtc.Value)
-                        group new { duh, o, d } by d.DiscountTypeId into g
+                        group new { duh, o, d, oi } by d.DiscountTypeId into g
                         select new DiscountReportModel
                         {
-                            DiscountTypeName = ((DiscountType)g.Key).ToString(),  // A kupon típus azonosítója
-                            UsageCount = g.Count(),  // Felhasználási számok összege
-                            TotalDiscountAmount = g.Sum(x => x.o.OrderSubTotalDiscountInclTax) + g.Sum(x => x.d.DiscountAmount) // Kedvezmény összegzése
+                            DiscountTypeName = ((DiscountType)g.Key).ToString(), 
+                            UsageCount = g.Select(x => x.o.Id).Distinct().Count(),  
+                            TotalDiscountAmount =  g.Sum(x => x.o.OrderSubTotalDiscountInclTax) + 
+                                                   g.Sum(x => x.d.DiscountAmount) + 
+                                                   g.Sum(x => x.oi.DiscountAmountExclTax)
                         };
 
             var result = await query.ToListAsync();
@@ -184,7 +193,7 @@ namespace Nop.Plugin.Reports.CustomReports.Services
         {
             var query = from order in _orderRepository.Table
                         join shipment in _shipmentRepository.Table on order.Id equals shipment.OrderId
-                        where order.OrderStatusId == 50 // Csak a törölt státuszú rendelések
+                        where order.OrderStatusId == 40 // Cancelled
                               && shipment.DeliveryDateUtc != null // Csak a szállítással rendelkező rendelések
                               && (!createdFromUtc.HasValue || shipment.DeliveryDateUtc >= createdFromUtc.Value)
                               && (!createdToUtc.HasValue || shipment.DeliveryDateUtc <= createdToUtc.Value)
@@ -248,9 +257,82 @@ namespace Nop.Plugin.Reports.CustomReports.Services
 
             return bestsellers;
         }
-        
+
         #endregion
 
+        #region OrderDetails
+        public async Task<IList<OrderDetailsReportModel>> GetOrderDetailsReportModelListByDateAsync(OrderDetailsSearchModel searchModel)
+        {
+            // Base query with the required fields
+            var query = from order in _orderRepository.Table
+                        join shipment in _shipmentRepository.Table on order.Id equals shipment.OrderId into shipmentGroup
+                        from shipment in shipmentGroup.DefaultIfEmpty()
+                        join note in _orderNoteRepository.Table on order.Id equals note.OrderId
+                        where note.Note.Contains("Order status has been changed to Feldolgozás alatt") &&
+                              (!searchModel.StartDate.HasValue || note.CreatedOnUtc >= searchModel.StartDate.Value) &&
+                              (!searchModel.EndDate.HasValue || note.CreatedOnUtc <= searchModel.EndDate.Value)
+                        select new OrderDetailsReportModel
+                        {
+                            OrderId = order.Id,
+                            Status = order.TesztRendeles
+                                ? "Teszt"
+                                : order.Deleted
+                                    ? "Törölve"
+                                    : order.OrderStatusId == (int)OrderStatus.Cancelled
+                                        ? order.ShippingStatusId == (int)ShippingStatus.VisszajottEllenorzesreVar
+                                            ? "Visszajött"
+                                            : ((OrderStatus)order.OrderStatusId).ToString()
+                                        : order.OrderStatusId == (int)OrderStatus.Complete
+                                            ? "Teljesítve"
+                                            : ((OrderStatus)order.OrderStatusId).ToString(),
+                            ProcessingAvailableDate = note.CreatedOnUtc,
+                            PackageCompletedDate = shipment.CreatedOnUtc,
+                            ShippedDate = shipment.ShippedDateUtc,
+                            DeliveredDate = shipment.DeliveryDateUtc,
+                            ShippingMethod = !string.IsNullOrEmpty(shipment.SzallitasiMod) 
+                                    ? string.Equals(shipment.SzallitasiMod, "GLS")
+                                        ? "GLS Futár"
+                                        : shipment.SzallitasiMod
+                                    : string.Equals(order.ShippingMethod, "GLS")
+                                        ? "GLS Futár"
+                                        : order.ShippingMethod,
+                            PaymentMethod = order.PaymentMethodSystemName == "Payments.CashOnDelivery"
+                                    ? "Utánvét"
+                                    : order.PaymentMethodSystemName == "Payments.SimplePay"
+                                        ? "SimplePay"
+                                        : !string.IsNullOrEmpty(order.PaymentMethodSystemName)
+                                            ? "order.PaymentMethodSystemName"
+                                            : "MISSING",
+                            PackagingTime = shipment.CreatedOnUtc - note.CreatedOnUtc
+                        };
+
+            
+            var data = await query.ToListAsync();
+
+            foreach (var item in data)
+            {
+                item.ProcessingAvailableDate = item.ProcessingAvailableDate.HasValue 
+                    ? await _dateTimeHelper.ConvertToUserTimeAsync(item.ProcessingAvailableDate.Value, DateTimeKind.Utc)
+                    : (DateTime?)null;
+                item.PackageCompletedDate = item.PackageCompletedDate.HasValue
+                    ? await _dateTimeHelper.ConvertToUserTimeAsync(item.PackageCompletedDate.Value, DateTimeKind.Utc)
+                    : (DateTime?)null;
+                item.ShippedDate = item.ShippedDate.HasValue
+                    ? await _dateTimeHelper.ConvertToUserTimeAsync(item.ShippedDate.Value, DateTimeKind.Utc)
+                    : (DateTime?)null;
+                item.DeliveredDate = item.DeliveredDate.HasValue
+                    ? await _dateTimeHelper.ConvertToUserTimeAsync(item.DeliveredDate.Value, DateTimeKind.Utc)
+                    : (DateTime?)null;
+                item.PackagingTime = item.PackageCompletedDate.HasValue && item.ProcessingAvailableDate.HasValue 
+                    ? item.PackageCompletedDate - item.ProcessingAvailableDate
+                    : null;
+            }
+
+            return data;
+        }
+
+        #endregion
+        
         #endregion
     }
 }

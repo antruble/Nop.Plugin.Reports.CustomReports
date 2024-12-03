@@ -56,6 +56,9 @@
 	  <None Update="Views\CustomerReports\ShoperiaPlusSubscriptions\ShoperiaPlusSubscriptions.cshtml">
 	    <CopyToOutputDirectory>Always</CopyToOutputDirectory>
 	  </None>
+	  <None Update="Views\OrderDetails\OrderDetails.cshtml">
+	    <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+	  </None>
 	  <None Update="Views\Problemasak\ProblemasManufacturer\ProblemasManufacturer.cshtml">
 	    <CopyToOutputDirectory>Always</CopyToOutputDirectory>
 	  </None>
@@ -74,6 +77,7 @@
 	  <Folder Include="Views\CustomerReports\Discounts\" />
 	  <Folder Include="Views\CustomerReports\ReturnedOrders\" />
 	  <Folder Include="Views\CustomerReports\ShoperiaPlusSubscriptions\" />
+	  <Folder Include="Views\OrderDetails\" />
 	</ItemGroup>
 
 	<!-- This target execute after "Build" target -->

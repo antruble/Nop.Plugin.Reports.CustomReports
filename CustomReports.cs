@@ -181,14 +181,14 @@ namespace Nop.Plugin.Reports.CustomReports
                         new { SystemName = "Reports.CustomerReports.ReturnedOrders", Title = "ReturnedOrders", ControllerName = "ReturnedOrders", IconClass = "far fa-dot-circle" }
                     }
                 },
-                //new
-                //{
-                //    IsGroup = false,
-                //    SystemName = "Reports.CustomerReports.SingleReport",
-                //    Title = "SingleReport",
-                //    IconClass = "far fa-chart-bar",
-                //    ControllerName = "SingleReport"
-                //},
+                new
+                {
+                    IsGroup = false,
+                    SystemName = "Reports.OrderDetails",
+                    Title = "Order details",
+                    IconClass = "far fa-dot-circle",
+                    ControllerName = "OrderDetails"
+                },
                 new
                 {
                     IsGroup = true,

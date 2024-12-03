@@ -4,6 +4,7 @@ using Nop.Plugin.Reports.CustomReports.Models.CustomerReports.DiscountModels;
 using Nop.Plugin.Reports.CustomReports.Models.CustomerReports.RegisteredCustomers;
 using Nop.Plugin.Reports.CustomReports.Models.CustomerReports.ReturnedOrders;
 using Nop.Plugin.Reports.CustomReports.Models.CustomerReports.ShoperiaPlusSubscriptions;
+using Nop.Plugin.Reports.CustomReports.Models.OrderDetails;
 using Nop.Plugin.Reports.CustomReports.Models.Problemasak.ProblemasManufacturer;
 using Nop.Plugin.Reports.CustomReports.Models.Problemasak.ProblemasOrder;
 using Nop.Plugin.Reports.CustomReports.Models.Problemasak.ProblemasProduct;
@@ -43,6 +44,12 @@ namespace Nop.Plugin.Reports.CustomReports.Factories.CustomerReports
         Task<List<ProblemasManufacturerReportModel>> FetchProblemasManufacturerDataAsync(ProblemasManufacturerSearchModel searchModel);
         Task<List<ProblemasOrderReportModel>> FetchProblemasOrderDataAsync(ProblemasOrderSearchModel searchModel);
         Task<List<ProblemasProductReportModel>> FetchProblemasProductDataAsync(ProblemasProductSearchModel searchModel);
+
+        #endregion
+
+        #region OrderDetails
+
+        Task<List<OrderDetailsReportModel>> FetchOrderDetailsDataAsync(OrderDetailsSearchModel searchModel);
 
         #endregion
     }

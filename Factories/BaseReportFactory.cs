@@ -1,5 +1,7 @@
 ﻿using Microsoft.AspNetCore.Mvc.Rendering;
 using Nop.Core;
+using Nop.Core.Domain.Orders;
+using Nop.Core.Domain.Shipping;
 using Nop.Plugin.Reports.CustomReports.Factories.CustomerReports;
 using Nop.Plugin.Reports.CustomReports.Models.Bestsellers;
 using Nop.Plugin.Reports.CustomReports.Models.CustomerReports.DailyOrders;
@@ -7,10 +9,12 @@ using Nop.Plugin.Reports.CustomReports.Models.CustomerReports.DiscountModels;
 using Nop.Plugin.Reports.CustomReports.Models.CustomerReports.RegisteredCustomers;
 using Nop.Plugin.Reports.CustomReports.Models.CustomerReports.ReturnedOrders;
 using Nop.Plugin.Reports.CustomReports.Models.CustomerReports.ShoperiaPlusSubscriptions;
+using Nop.Plugin.Reports.CustomReports.Models.OrderDetails;
 using Nop.Plugin.Reports.CustomReports.Models.Problemasak.ProblemasManufacturer;
 using Nop.Plugin.Reports.CustomReports.Models.Problemasak.ProblemasOrder;
 using Nop.Plugin.Reports.CustomReports.Models.Problemasak.ProblemasProduct;
 using Nop.Plugin.Reports.CustomReports.Models.SearchModels;
+using Nop.Services;
 using Nop.Services.Directory;
 using Nop.Services.Localization;
 using Nop.Web.Areas.Admin.Factories;
@@ -135,6 +139,11 @@ namespace Nop.Plugin.Reports.CustomReports.Factories
                 var result = await BuildProblemasProductSearchModelAsync(new ProblemasProductSearchModel());
                 return result as TSearchModel;
             }
+            else if (typeof(TSearchModel) == typeof(OrderDetailsSearchModel))
+            {
+                var result = await BuildOrderDetailsSearchModelAsync(new OrderDetailsSearchModel());
+                return result as TSearchModel;
+            }
             // További search model építési metódusok helye...
             //else if (typeof(TSearchModel) == typeof(ProblemasProductSearchModel))
             //{
@@ -210,7 +219,13 @@ namespace Nop.Plugin.Reports.CustomReports.Factories
 
                 #endregion
 
-
+                #region OrderDetails
+                
+                case Type reportType when reportType == typeof(OrderDetailsReportModel) && searchModel is OrderDetailsSearchModel orderDetailsSearchModel:
+                    var orderDetailsResult = await _customerReportsModelFactory.FetchOrderDetailsDataAsync(orderDetailsSearchModel);
+                    return orderDetailsResult.Cast<TReportModel>().ToList();
+                
+                    #endregion
                 default:
                     throw new InvalidOperationException($"Invalid search model type for {typeof(TReportModel).Name}.");
             }
@@ -337,6 +352,150 @@ namespace Nop.Plugin.Reports.CustomReports.Factories
 
 
             return searchModel;
+        }
+        private async Task<OrderDetailsSearchModel> BuildOrderDetailsSearchModelAsync(OrderDetailsSearchModel searchModel)
+        {
+            if (searchModel == null)
+                throw new ArgumentNullException(nameof(searchModel));
+
+            //prepare OrderStatusOptions
+            //await PrepareOrderStatusesAsync(searchModel.OrderStatusOptions);
+
+            //prepare ShippingOptions
+            //await PrepareShippingMethodsAsync(searchModel.ShippingOptions);
+
+            //prepare PaymentOptions
+            //await PreparePaymentsAsync(searchModel.PaymentOptions);
+
+            return searchModel;
+        }
+
+        #endregion
+
+        #region Utilities
+        
+        /// <summary>
+        /// Prepare default item
+        /// </summary>
+        /// <param name="items">Available items</param>
+        /// <param name="withSpecialDefaultItem">Whether to insert the first special item for the default value</param>
+        /// <param name="defaultItemText">Default item text; pass null to use "All" text</param>
+        /// <param name="defaultItemValue">Default item value; defaults 0</param>
+        /// <returns>A task that represents the asynchronous operation</returns>
+        private async Task PrepareDefaultItemAsync(IList<SelectListItem> items, bool withSpecialDefaultItem, string defaultItemText = null, string defaultItemValue = null)
+        {
+            if (items == null)
+                throw new ArgumentNullException(nameof(items));
+
+            //whether to insert the first special item for the default value
+            if (!withSpecialDefaultItem)
+                return;
+
+            //prepare item text
+            defaultItemText ??= await _localizationService.GetResourceAsync("Admin.Common.All");
+
+            //insert this default item at first
+            items.Insert(0, new SelectListItem { Text = defaultItemText, Value = string.Empty });
+        }
+
+        /// <summary>
+        /// Prepare available shipping methods
+        /// </summary>
+        /// <param name="items">Shipping method items</param>
+        /// <param name="withSpecialDefaultItem">Whether to insert the first special item for the default value</param>
+        /// <param name="defaultItemText">Default item text; pass null to use default value of the default item text</param>
+        private async Task PrepareShippingMethodsAsync(IList<SelectListItem> items, bool withSpecialDefaultItem = true, string defaultItemText = null)
+        {
+            if (items == null)
+                throw new ArgumentNullException(nameof(items));
+
+            //prepare available order statuses
+            items.Add(new SelectListItem
+            {
+                Value = "GLS",
+                Text = await _localizationService.GetResourceAsync("Admin.Reports.OrderDetails.Shipping.Search.GLS")
+            });
+            items.Add(new SelectListItem
+            {
+                Value = "ExpressOne",
+                Text = await _localizationService.GetResourceAsync("Admin.Reports.OrderDetails.Shipping.Search.ExpressOne")
+            });
+            items.Add(new SelectListItem
+            {
+                Value = "PersonalReceipt",
+                Text = await _localizationService.GetResourceAsync("Admin.Reports.OrderDetails.Shipping.Search.PersonalReceipt")
+            });
+
+            //insert special item for the default value
+            await PrepareDefaultItemAsync(items, withSpecialDefaultItem, defaultItemText);
+        }
+        
+        /// <summary>
+        /// Prepare available order statuses
+        /// </summary>
+        private async Task PrepareOrderStatusesAsync(IList<SelectListItem> items, bool withSpecialDefaultItem = true, string defaultItemText = null)
+        {
+            if (items == null)
+                throw new ArgumentNullException(nameof(items));
+
+            //prepare available order statuses
+            items.Add(new SelectListItem
+            {
+                Value = "Completed",
+                Text = await _localizationService.GetResourceAsync("Admin.Reports.OrderDetails.OrderStatus.Search.Completed")
+            });
+            items.Add(new SelectListItem
+            {
+                Value = "Deleted",
+                Text = await _localizationService.GetResourceAsync("Admin.Reports.OrderDetails.OrderStatus.Search.Deleted")
+            });
+            items.Add(new SelectListItem
+            {
+                Value = "Returned",
+                Text = await _localizationService.GetResourceAsync("Admin.Reports.OrderDetails.OrderStatus.Search.Returned")
+            });
+            items.Add(new SelectListItem
+            {
+                Value = "OnTheWay",
+                Text = await _localizationService.GetResourceAsync("Admin.Reports.OrderDetails.OrderStatus.Search.OnTheWay")
+            });
+            items.Add(new SelectListItem
+            {
+                Value = "Processing",
+                Text = await _localizationService.GetResourceAsync("Admin.Reports.OrderDetails.OrderStatus.Search.Processing")
+            });
+            items.Add(new SelectListItem
+            {
+                Value = "Test",
+                Text = await _localizationService.GetResourceAsync("Admin.Reports.OrderDetails.OrderStatus.Search.Test")
+            });
+
+            //insert special item for the default value
+            await PrepareDefaultItemAsync(items, withSpecialDefaultItem, defaultItemText);
+        }
+
+        /// <summary>
+        /// Prepare available payment methods
+        /// </summary>
+        private async Task PreparePaymentsAsync(IList<SelectListItem> items, bool withSpecialDefaultItem = true, string defaultItemText = null)
+        {
+            if (items == null)
+                throw new ArgumentNullException(nameof(items));
+
+            //prepare available order statuses
+            items.Add(new SelectListItem
+            {
+                Value = "Payments.CashOnDelivery",
+                Text = await _localizationService.GetResourceAsync("Admin.Reports.OrderDetails.Payment.Search.CashOnDelivery")
+            });
+            items.Add(new SelectListItem
+            {
+                Value = "Payments.SimplePay",
+                Text = await _localizationService.GetResourceAsync("Admin.Reports.OrderDetails.Payment.Search.SimplePay")
+            });
+
+            //insert special item for the default value
+            await PrepareDefaultItemAsync(items, withSpecialDefaultItem, defaultItemText);
         }
         
         #endregion
