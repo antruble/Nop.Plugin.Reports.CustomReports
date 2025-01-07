@@ -10,6 +10,7 @@ using Nop.Plugin.Reports.CustomReports.Models.CustomerReports.RegisteredCustomer
 using Nop.Plugin.Reports.CustomReports.Models.CustomerReports.ReturnedOrders;
 using Nop.Plugin.Reports.CustomReports.Models.CustomerReports.ShoperiaPlusSubscriptions;
 using Nop.Plugin.Reports.CustomReports.Models.OrderDetails;
+using Nop.Plugin.Reports.CustomReports.Models.OrderSummary;
 using Nop.Plugin.Reports.CustomReports.Models.Problemasak.ProblemasManufacturer;
 using Nop.Plugin.Reports.CustomReports.Models.Problemasak.ProblemasOrder;
 using Nop.Plugin.Reports.CustomReports.Models.Problemasak.ProblemasProduct;
@@ -144,6 +145,11 @@ namespace Nop.Plugin.Reports.CustomReports.Factories
                 var result = await BuildOrderDetailsSearchModelAsync(new OrderDetailsSearchModel());
                 return result as TSearchModel;
             }
+            else if (typeof(TSearchModel) == typeof(OrderSummarySearchModel))
+            {
+                var result = await BuildOrderSummarySearchModelAsync(new OrderSummarySearchModel());
+                return result as TSearchModel;
+            }
             // További search model építési metódusok helye...
             //else if (typeof(TSearchModel) == typeof(ProblemasProductSearchModel))
             //{
@@ -225,7 +231,15 @@ namespace Nop.Plugin.Reports.CustomReports.Factories
                     var orderDetailsResult = await _customerReportsModelFactory.FetchOrderDetailsDataAsync(orderDetailsSearchModel);
                     return orderDetailsResult.Cast<TReportModel>().ToList();
                 
-                    #endregion
+                #endregion
+
+                #region OrderSummary
+                
+                case Type reportType when reportType == typeof(OrderSummaryReportModel) && searchModel is OrderSummarySearchModel orderSummarySearchModel:
+                    var orderSummaryResult = await _customerReportsModelFactory.FetchOrderSummaryDataAsync(orderSummarySearchModel);
+                    return orderSummaryResult.Cast<TReportModel>().ToList();
+                
+                #endregion
                 default:
                     throw new InvalidOperationException($"Invalid search model type for {typeof(TReportModel).Name}.");
             }
@@ -369,6 +383,16 @@ namespace Nop.Plugin.Reports.CustomReports.Factories
 
             return searchModel;
         }
+        private async Task<OrderSummarySearchModel> BuildOrderSummarySearchModelAsync(OrderSummarySearchModel searchModel)
+        {
+            if (searchModel == null)
+                throw new ArgumentNullException(nameof(searchModel));
+
+            //prepare OrderStatusOptions
+            await PreparePeriodTypesAsync(searchModel.PeriodTypeOptions);
+
+            return searchModel;
+        }
 
         #endregion
 
@@ -492,6 +516,26 @@ namespace Nop.Plugin.Reports.CustomReports.Factories
             {
                 Value = "Payments.SimplePay",
                 Text = await _localizationService.GetResourceAsync("Admin.Reports.OrderDetails.Payment.Search.SimplePay")
+            });
+
+            //insert special item for the default value
+            await PrepareDefaultItemAsync(items, withSpecialDefaultItem, defaultItemText);
+        }
+        private async Task PreparePeriodTypesAsync(IList<SelectListItem> items, bool withSpecialDefaultItem = true, string defaultItemText = null)
+        {
+            if (items == null)
+                throw new ArgumentNullException(nameof(items));
+
+            //prepare available order statuses
+            items.Add(new SelectListItem
+            {
+                Value = "0",
+                Text = await _localizationService.GetResourceAsync("Admin.Reports.OrderSummary.Search.Daily")
+            });
+            items.Add(new SelectListItem
+            {
+                Value = "1",
+                Text = await _localizationService.GetResourceAsync("Admin.Reports.OrderSummary.Search.Monthly")
             });
 
             //insert special item for the default value

@@ -1,0 +1,112 @@
+@using Nop.Plugin.Reports.CustomReports.Models.DiscountSummary
+@model EmptySearchModel
+@{
+    //page title
+    Layout = "_AdminLayout";
+    ViewBag.PageTitle = T("Admin.Reports.DiscountSummary").Text;
+    //active menu item (system name)
+    NopHtml.SetActiveMenuItemSystemName("DiscountSummary");
+}
+
+@{
+    var bestsellerSummaryColumnNumber = 2;
+
+    const string hideSearchBlockAttributeName = "OrderDetailsPage.HideSearchBlock";
+    var hideSearchBlock = await genericAttributeService.GetAttributeAsync<bool>(await workContext.GetCurrentCustomerAsync(), hideSearchBlockAttributeName);
+}
+<form asp-controller="Report" asp-action="ExportExcel" method="post">
+    <div class="content-header clearfix">
+        <h1 class="float-left">
+            @T("Admin.Reports.DiscountSummary")
+        </h1>
+        <div class="float-right">
+            <button asp-action="ExportExcel" type="submit" name="exportexcel-all">
+                <i class="far fa-file-excel"></i>
+                @T("Admin.Common.ExportToExcel.All")
+            </button>
+        </div>
+    </div>
+
+    <section class="content">
+        <div class="container-fluid">
+            <div class="form-horizontal">
+                <div class="cards-group">
+                    <div class="card card-default card-search">
+                        <div class="card-body">
+                            <div class="row search-row @(!hideSearchBlock ? "opened" : "")" data-hideAttribute="@hideSearchBlockAttributeName">
+                                <div class="search-text">@T("Admin.Common.Search")</div>
+                                <div class="icon-search"><i class="fas fa-search" aria-hidden="true"></i></div>
+                                <div class="icon-collapse"><i class="far fa-angle-@(!hideSearchBlock ? "up" : "down")" aria-hidden="true"></i></div>
+                            </div>
+
+                            <div class="search-body @(hideSearchBlock ? "closed" : "")">
+                                <div class="row">
+                                    <div class="text-center col-12">
+                                        <button type="button" id="search-discountsummaryreport" class="btn btn-primary btn-search">
+                                            <i class="fas fa-chart-line"></i>
+                                            @T("Admin.Reports.DiscountSummary.RunReport")
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="card card-default">
+                        <div class="card-body">
+                            <nop-doc-reference asp-string-resource="@T("Admin.Documentation.Reference.Reports", Docs.Reports + Utm.OnAdmin)" />
+
+                            @await Html.PartialAsync("Table", new DataTablesModel
+                            {
+                                Name = "discountsummaryreport-grid",
+                                UrlRead = new DataUrl("FetchReport", "DiscountSummary", null),
+                                SearchButtonId = "search-discountsummaryreport",
+                                Length = Model.PageSize,
+                                LengthMenu = Model.AvailablePageSizes,
+                                ColumnCollection = new List<ColumnProperty>
+                                {
+                                    new ColumnProperty(nameof(DiscountSummaryReportModel.DiscountName))
+                                    {
+                                        Title = T("Admin.Reports.DiscountSummary.Fields.DiscountName").Text
+                                    },
+                                    new ColumnProperty(nameof(DiscountSummaryReportModel.DailyUsageCount))
+                                    {
+                                        Title = T("Admin.Reports.DiscountSummary.Fields.DailyUsageCount").Text
+                                    },
+                                    new ColumnProperty(nameof(DiscountSummaryReportModel.DailyTotalDiscountAmount))
+                                    {
+                                        Title = T("Admin.Reports.DiscountSummary.Fields.DailyTotalDiscountAmount").Text
+                                    },
+                                    new ColumnProperty(nameof(DiscountSummaryReportModel.DailyPercentage))
+                                    {
+                                        Title = T("Admin.Reports.DiscountSummary.Fields.DailyPercentage").Text
+                                    },
+                                    new ColumnProperty(nameof(DiscountSummaryReportModel.MonthlyUsageCount))
+                                    {
+                                        Title = T("Admin.Reports.DiscountSummary.Fields.MonthlyUsageCount").Text
+                                    },
+                                    new ColumnProperty(nameof(DiscountSummaryReportModel.MonthlyTotalDiscountAmount))
+                                    {
+                                        Title = T("Admin.Reports.DiscountSummary.Fields.MonthlyTotalDiscountAmount").Text
+                                    },
+                                    new ColumnProperty(nameof(DiscountSummaryReportModel.MonthlyPercentage))
+                                    {
+                                        Title = T("Admin.Reports.DiscountSummary.Fields.MonthlyPercentage").Text
+                                    },
+                                    new ColumnProperty(nameof(DiscountSummaryReportModel.MarginAmount))
+                                    {
+                                        Title = T("Admin.Reports.DiscountSummary.Fields.MarginAmount").Text
+                                    },
+                                    new ColumnProperty(nameof(DiscountSummaryReportModel.MarginPercentage))
+                                    {
+                                        Title = T("Admin.Reports.DiscountSummary.Fields.MarginPercentage").Text
+                                    }
+                                }
+                           })
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+</form>

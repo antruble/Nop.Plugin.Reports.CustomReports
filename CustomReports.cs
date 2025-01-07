@@ -10,6 +10,7 @@ using System.Threading.Tasks;
 using System.Collections.Generic;
 using Nop.Services.Logging;
 using System.Runtime.CompilerServices;
+using Nop.Services.Localization;
 
 namespace Nop.Plugin.Reports.CustomReports
 {
@@ -21,6 +22,7 @@ namespace Nop.Plugin.Reports.CustomReports
         #region Fields
 
         private readonly IPermissionService _permissionService;
+        private readonly ILocalizationService _localizationService;
         private readonly ILogger _logger;
         private readonly IWebHelper _webHelper;
 
@@ -30,11 +32,13 @@ namespace Nop.Plugin.Reports.CustomReports
 
         public CustomReports(
             IPermissionService permissionService,
+            ILocalizationService localizationService,
             ILogger logger,
             IWebHelper webHelper 
             ) 
         {
             _permissionService = permissionService;
+            _localizationService = localizationService;
             _logger = logger;
             _webHelper = webHelper;
         }
@@ -83,7 +87,7 @@ namespace Nop.Plugin.Reports.CustomReports
                 return;
 
             // Riportcsoportok és önálló riportok hozzáadása
-            var reportsMenuItems = GetReportsMenuItems();
+            var reportsMenuItems = await GetReportsMenuItemsAsync();
             foreach (var item in reportsMenuItems)
             {
                 // Csoportos riport menü, vagy egyedüli report menü hozzáadása a "Reports" menühöz
@@ -162,7 +166,7 @@ namespace Nop.Plugin.Reports.CustomReports
         /// Visszaadja a konfigurált riportcsoportokat és riportokat.
         /// </summary>
         /// <returns>A riportokat tartalmazó lista.</returns>
-        private List<dynamic> GetReportsMenuItems()
+        private async Task<List<dynamic>> GetReportsMenuItemsAsync()
         {
             return new List<dynamic>
             {
@@ -188,6 +192,14 @@ namespace Nop.Plugin.Reports.CustomReports
                     Title = "Order details",
                     IconClass = "far fa-dot-circle",
                     ControllerName = "OrderDetails"
+                },
+                new
+                {
+                    IsGroup = false,
+                    SystemName = "Reports.OrderSummary",
+                    Title = await _localizationService.GetResourceAsync("Admin.Reports.OrderSummary.Title"),
+                    IconClass = "far fa-dot-circle",
+                    ControllerName = "OrderSummary"
                 },
                 new
                 {

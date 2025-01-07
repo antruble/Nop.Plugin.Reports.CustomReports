@@ -38,36 +38,9 @@
 	  <None Update="logo.png">
 	    <CopyToOutputDirectory>Always</CopyToOutputDirectory>
 	  </None>
-	  <None Update="Views\Bestsellers\Bestsellers.cshtml">
-	    <CopyToOutputDirectory>Always</CopyToOutputDirectory>
-	  </None>
-	  <None Update="Views\CustomerReports\DailyOrders\DailyOrders.cshtml">
-	    <CopyToOutputDirectory>Always</CopyToOutputDirectory>
-	  </None>
-	  <None Update="Views\CustomerReports\Discounts\Discounts.cshtml">
-	    <CopyToOutputDirectory>Always</CopyToOutputDirectory>
-	  </None>
-	  <None Update="Views\CustomerReports\RegisteredCustomers\RegisteredCustomers.cshtml">
-	    <CopyToOutputDirectory>Always</CopyToOutputDirectory>
-	  </None>
-	  <None Update="Views\CustomerReports\ReturnedOrders\ReturnedOrders.cshtml">
-	    <CopyToOutputDirectory>Always</CopyToOutputDirectory>
-	  </None>
-	  <None Update="Views\CustomerReports\ShoperiaPlusSubscriptions\ShoperiaPlusSubscriptions.cshtml">
-	    <CopyToOutputDirectory>Always</CopyToOutputDirectory>
-	  </None>
-	  <None Update="Views\OrderDetails\OrderDetails.cshtml">
-	    <CopyToOutputDirectory>Always</CopyToOutputDirectory>
-	  </None>
-	  <None Update="Views\Problemasak\ProblemasManufacturer\ProblemasManufacturer.cshtml">
-	    <CopyToOutputDirectory>Always</CopyToOutputDirectory>
-	  </None>
-	  <None Update="Views\Problemasak\ProblemasOrder\ProblemasOrder.cshtml">
-	    <CopyToOutputDirectory>Always</CopyToOutputDirectory>
-	  </None>
-	  <None Update="Views\Problemasak\ProblemasProduct\ProblemasProduct.cshtml">
-	    <CopyToOutputDirectory>Always</CopyToOutputDirectory>
-	  </None>
+	    <None Update="Views\**\*">
+		    <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+	    </None>
 	  <None Update="Views\_ViewImports.cshtml">
 	    <CopyToOutputDirectory>Always</CopyToOutputDirectory>
 	  </None>

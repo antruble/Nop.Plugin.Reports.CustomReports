@@ -1,4 +1,5 @@
-﻿using Nop.Core;
+﻿
+using Nop.Core;
 using Nop.Core.Domain.Catalog;
 using Nop.Core.Domain.Customers;
 using Nop.Core.Domain.Discounts;
@@ -7,7 +8,9 @@ using Nop.Core.Domain.Payments;
 using Nop.Core.Domain.Shipping;
 using Nop.Data;
 using Nop.Plugin.Reports.CustomReports.Models.CustomerReports.DiscountModels;
+using Nop.Plugin.Reports.CustomReports.Models.DiscountSummary;
 using Nop.Plugin.Reports.CustomReports.Models.OrderDetails;
+using Nop.Plugin.Reports.CustomReports.Models.OrderSummary;
 using Nop.Plugin.Reports.CustomReports.Models.SearchModels;
 using Nop.Services.Catalog;
 using Nop.Services.Helpers;
@@ -19,6 +22,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+
 
 namespace Nop.Plugin.Reports.CustomReports.Services
 {
@@ -40,6 +44,7 @@ namespace Nop.Plugin.Reports.CustomReports.Services
         private readonly IRepository<Order> _orderRepository;
         private readonly IRepository<OrderItem> _orderItemRepository;
         private readonly IRepository<OrderNote> _orderNoteRepository;
+        private readonly IRepository<Product> _productRepository;
         private readonly IRepository<Shipment> _shipmentRepository;
 
         private readonly IWorkContext _workContext;
@@ -62,6 +67,7 @@ namespace Nop.Plugin.Reports.CustomReports.Services
                 IRepository<Order> orderRepository,
                 IRepository<OrderItem> orderItemRepository,
                 IRepository<OrderNote> orderNoteRepository,
+                IRepository<Product> productRepository,
                 IRepository<Shipment> shipmentRepository,
 
                 IWorkContext workContext,
@@ -78,6 +84,7 @@ namespace Nop.Plugin.Reports.CustomReports.Services
             _orderRepository = orderRepository;
             _orderItemRepository = orderItemRepository;
             _orderNoteRepository = orderNoteRepository;
+            _productRepository = productRepository;
             _shipmentRepository = shipmentRepository;
 
             _workContext = workContext;
@@ -170,14 +177,14 @@ namespace Nop.Plugin.Reports.CustomReports.Services
         {
             // Az összes customer száma, akiknél a Husegprogram mező igaz
             var totalShoperiaPlusSubscriptions = await _customerRepository.Table
-                .CountAsync(c => c.Husegprogram);
+                .CountAsync(c => c.ShoperiaKlubtag);
 
             // Az időszakban feliratkozott hűségprogramos vásárlók száma (HusegCsatlakozasDatum alapján)
             var shoperiaPlusSubscriptionsInPeriod = await _customerRepository.Table
-                .CountAsync(c => c.Husegprogram &&
-                                 c.HusegCsatlakozasDatum.HasValue &&
-                                 (!createdFromUtc.HasValue || c.HusegCsatlakozasDatum >= createdFromUtc.Value) &&
-                                 (!createdToUtc.HasValue || c.HusegCsatlakozasDatum <= createdToUtc.Value));
+                .CountAsync(c => c.ShoperiaKlubtag &&
+                                 c.KlubCsatlakozasDatum.HasValue &&
+                                 (!createdFromUtc.HasValue || c.KlubCsatlakozasDatum >= createdFromUtc.Value) &&
+                                 (!createdToUtc.HasValue || c.KlubCsatlakozasDatum <= createdToUtc.Value));
 
             // Visszaadunk egy tuple-t, ami tartalmazza a teljes számot és az időszakon belüliek számát
             return (totalShoperiaPlusSubscriptions, shoperiaPlusSubscriptionsInPeriod);
@@ -333,6 +340,139 @@ namespace Nop.Plugin.Reports.CustomReports.Services
 
         #endregion
         
+        #region OrderSummary
+        public async Task<IList<OrderSummaryReportModel>> GetOrderSummaryReportModelListAsync(OrderSummarySearchModel searchModel)
+        {
+            var helperQuery = from oi in _orderItemRepository.Table
+                              join o in _orderRepository.Table on oi.OrderId equals o.Id
+                              where !o.Deleted && !o.TesztRendeles
+                              group oi by oi.OrderId into g
+                              select new 
+                              { 
+                                  OrderId = g.Key, 
+                                  Quantity = g.Sum(x => x.Quantity), 
+                                  TotalPriceExlDiscounts = g.Sum(x => x.PriceInclTax + x.DiscountAmountInclTax), 
+                                  TotalPriceInclDiscounts = g.Sum(x => x.PriceInclTax), 
+                                  TotalDiscountAmount = g.Sum(x => x.DiscountAmountInclTax) 
+                              };
+
+            if (searchModel.PeriodTypeId == 0)
+            {
+                var query = from o in _orderRepository.Table
+                            join oiHelper in helperQuery
+                            on o.Id equals oiHelper.OrderId into joined
+                            from oiHelper in joined.DefaultIfEmpty()
+                            where !o.Deleted && !o.TesztRendeles
+                            select new // HELPER
+                            {
+                                o.Id, // Order ID
+                                o.CreatedOnUtc, // Dátum az Order táblából
+                                o.OrderSubtotalInclTax,
+                                o.OrderSubtotalExclTax,
+                                o.OrderSubTotalDiscountInclTax,
+                                o.OrderShippingInclTax,
+                                QuantityHelper = oiHelper != null ? oiHelper.Quantity : 0,
+                                TotalPriceExlDiscountsHelper = oiHelper != null ? oiHelper.TotalPriceExlDiscounts : 0,
+                                TotalPriceInclDiscountsHelper = oiHelper != null ? oiHelper.TotalPriceInclDiscounts : 0,
+                                TotalDiscountAmountHelper = oiHelper != null ? oiHelper.TotalDiscountAmount : 0,
+                                o.PaymentMethodAdditionalFeeInclTax,
+                                o.OrderTax,
+                                o.OrderTotal,
+                                o.OrderDiscount
+                            } into orderWithQuantity
+                            group orderWithQuantity by new
+                            {
+                                Period = orderWithQuantity.CreatedOnUtc.Date
+                            } into g
+                            orderby g.Key.Period
+                            select new OrderSummaryReportModel
+                            {
+                                Period = g.Key.Period.ToString("yyyy-MM-dd"), // Év és hónap formázása
+                                NumOfOrders = g.Count(), // Egyedi rendelések száma
+                                TotalQuantity = g.Sum(x => x.QuantityHelper), // Összes termék darabszám
+                                QuantityPerOrder = Math.Round(g.Sum(x => x.QuantityHelper) * 1.0m / g.Count(), 2), // Átlagos darabszám rendelésenként
+                                OrderSubtotalInclTax = Math.Round(g.Sum(x => x.OrderSubtotalInclTax + x.TotalDiscountAmountHelper)), // Összes rendelés SubTotal
+                                SubTotalPerOrder = Math.Round(g.Sum(x => x.OrderSubtotalInclTax + x.TotalDiscountAmountHelper) / g.Count(), 2),// Átlagos SubTotal rendelésenként
+                                OrderSubtotalExclTax = Math.Round(g.Sum(x => x.OrderSubtotalExclTax)), // TODO: Levonni a tax mentes oi discountokat
+                                OrderSubtotalDiscountInclTax = Math.Round(g.Sum(x => x.OrderSubTotalDiscountInclTax + x.TotalDiscountAmountHelper)),
+                                OrderShippingInclTax = Math.Round(g.Sum(x => x.OrderShippingInclTax)),
+                                PaymentMethodAdditionalFeeInclTax = g.Sum(x => x.PaymentMethodAdditionalFeeInclTax),
+                                OrderTax = Math.Round(g.Sum(x => x.OrderTax)),
+                                OrderTotal = Math.Round(g.Sum(x => x.OrderTotal)),
+                                OrderDiscount = Math.Round(g.Sum(x => x.OrderDiscount))
+                            };  
+
+                var data = query.ToList();
+
+                return data;
+            }
+            else
+            {
+                var query = from o in _orderRepository.Table
+                            join oiHelper in helperQuery
+                            on o.Id equals oiHelper.OrderId into joined
+                            from oiHelper in joined.DefaultIfEmpty()
+                            where !o.Deleted && !o.TesztRendeles
+                            select new
+                            {
+                                o.Id, // Order ID
+                                o.CreatedOnUtc, // Dátum az Order táblából
+                                o.OrderSubtotalInclTax,
+                                o.OrderSubtotalExclTax,
+                                o.OrderSubTotalDiscountInclTax,
+                                o.OrderShippingInclTax,
+                                QuantityHelper = oiHelper != null ? oiHelper.Quantity : 0,
+                                TotalPriceExlDiscountsHelper = oiHelper != null ? oiHelper.TotalPriceExlDiscounts : 0,
+                                TotalPriceInclDiscountsHelper = oiHelper != null ? oiHelper.TotalPriceInclDiscounts : 0,
+                                TotalDiscountAmountHelper = oiHelper != null ? oiHelper.TotalDiscountAmount : 0,
+                                o.PaymentMethodAdditionalFeeInclTax,
+                                o.OrderTax,
+                                o.OrderTotal,
+                                o.OrderDiscount
+                            } into orderWithQuantity
+                            group orderWithQuantity by new
+                            {
+                                Period = new { Year = orderWithQuantity.CreatedOnUtc.Year, Month = orderWithQuantity.CreatedOnUtc.Month }
+                            } into g
+                            orderby g.Key.Period
+                            select new OrderSummaryReportModel
+                            {
+                                Period = $"{g.Key.Period.Year}-{g.Key.Period.Month:D2}", // Év és hónap formázása
+                                NumOfOrders = g.Count(), // Egyedi rendelések száma
+                                TotalQuantity = g.Sum(x => x.QuantityHelper), // Összes termék darabszám
+                                QuantityPerOrder = Math.Round(g.Sum(x => x.QuantityHelper) * 1.0m / g.Count(), 2), // Átlagos darabszám rendelésenként
+                                OrderSubtotalInclTax = Math.Round(g.Sum(x => x.OrderSubtotalInclTax - x.TotalDiscountAmountHelper)), // Összes rendelés SubTotal
+                                SubTotalPerOrder = Math.Round(g.Sum(x => x.OrderSubtotalInclTax - x.TotalDiscountAmountHelper) / g.Count(), 2),// Átlagos SubTotal rendelésenként
+                                OrderSubtotalExclTax = Math.Round(g.Sum(x => x.OrderSubtotalExclTax)), // TODO: Levonni a tax mentes oi discountokat
+                                OrderSubtotalDiscountInclTax = Math.Round(g.Sum(x => x.OrderSubTotalDiscountInclTax + x.TotalDiscountAmountHelper)),
+                                OrderShippingInclTax = Math.Round(g.Sum(x => x.OrderShippingInclTax)),
+                                PaymentMethodAdditionalFeeInclTax = g.Sum(x => x.PaymentMethodAdditionalFeeInclTax),
+                                OrderTax = Math.Round(g.Sum(x => x.OrderTax)),
+                                OrderTotal = Math.Round(g.Sum(x => x.OrderTotal)),
+                                OrderDiscount = Math.Round(g.Sum(x => x.OrderDiscount))
+                            };
+
+                var data = query.ToList();
+
+                return data;
+            }
+        }
+        #endregion
+
+        #region DetailsSummary
+        public async Task<IList<DiscountSummaryReportModel>> GetDiscountSummaryReportModelListAsync(EmptySearchModel searchModel)
+        {
+            //var query = from orderItem in _orderItemRepository.Table oi
+            //            join product in _product.Table on order.Id equals orderItem.OrderId
+
+
+            //var data = await query.OrderBy(x => x.NumOfOrders).ToListAsync();
+
+            //return data;//TODO:
+            return new List<DiscountSummaryReportModel>();
+        }
+        #endregion
+
         #endregion
     }
 }

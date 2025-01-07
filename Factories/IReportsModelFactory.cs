@@ -9,6 +9,8 @@ using Nop.Plugin.Reports.CustomReports.Models.Problemasak.ProblemasManufacturer;
 using Nop.Plugin.Reports.CustomReports.Models.Problemasak.ProblemasOrder;
 using Nop.Plugin.Reports.CustomReports.Models.Problemasak.ProblemasProduct;
 using Nop.Plugin.Reports.CustomReports.Models.SearchModels;
+using Nop.Plugin.Reports.CustomReports.Models.OrderSummary;
+using Nop.Plugin.Reports.CustomReports.Models.DiscountSummary;
 using Nop.Web.Framework.Models;
 using System;
 using System.Collections.Generic;
@@ -50,6 +52,18 @@ namespace Nop.Plugin.Reports.CustomReports.Factories.CustomerReports
         #region OrderDetails
 
         Task<List<OrderDetailsReportModel>> FetchOrderDetailsDataAsync(OrderDetailsSearchModel searchModel);
+
+        #endregion
+
+        #region OrderSummary
+
+        Task<List<OrderSummaryReportModel>> FetchOrderSummaryDataAsync(OrderSummarySearchModel searchModel);
+
+        #endregion
+
+        #region DiscountSummary
+
+        Task<List<DiscountSummaryReportModel>> FetchDiscountSummaryDataAsync(EmptySearchModel searchModel);
 
         #endregion
     }

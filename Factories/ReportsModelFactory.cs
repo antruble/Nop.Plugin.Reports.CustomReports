@@ -22,6 +22,8 @@ using Nop.Core.Domain.Catalog;
 using Nop.Web.Framework.Models.Extensions;
 using Nop.Plugin.Reports.CustomReports.Services;
 using Nop.Plugin.Reports.CustomReports.Models.OrderDetails;
+using Nop.Plugin.Reports.CustomReports.Models.OrderSummary;
+using Nop.Plugin.Reports.CustomReports.Models.DiscountSummary;
 
 namespace Nop.Plugin.Reports.CustomReports.Factories.CustomerReports
 {
@@ -428,6 +430,29 @@ namespace Nop.Plugin.Reports.CustomReports.Factories.CustomerReports
                 throw new ArgumentNullException(nameof(searchModel));
 
             var result = await _customReportService.GetOrderDetailsReportModelListByDateAsync(searchModel);
+            return result.ToList();
+        }
+
+        #endregion
+
+        #region OrderSummary
+        public async Task<List<OrderSummaryReportModel>> FetchOrderSummaryDataAsync(OrderSummarySearchModel searchModel)
+        {
+            if (searchModel == null)
+                throw new ArgumentNullException(nameof(searchModel));
+
+            var result = await _customReportService.GetOrderSummaryReportModelListAsync(searchModel);
+            return result.ToList();
+        }
+
+        #endregion
+        #region DiscountSummary
+        public async Task<List<DiscountSummaryReportModel>> FetchDiscountSummaryDataAsync(EmptySearchModel searchModel)
+        {
+            if (searchModel == null)
+                throw new ArgumentNullException(nameof(searchModel));
+
+            var result = await _customReportService.GetDiscountSummaryReportModelListAsync(searchModel);
             return result.ToList();
         }
 
