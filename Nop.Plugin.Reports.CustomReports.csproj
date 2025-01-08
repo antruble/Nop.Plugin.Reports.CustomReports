@@ -50,6 +50,7 @@
 	  <Folder Include="Views\CustomerReports\Discounts\" />
 	  <Folder Include="Views\CustomerReports\ReturnedOrders\" />
 	  <Folder Include="Views\CustomerReports\ShoperiaPlusSubscriptions\" />
+	  <Folder Include="Views\CustomerId\" />
 	  <Folder Include="Views\OrderDetails\" />
 	</ItemGroup>
 

@@ -6,7 +6,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
-using Nop.Plugin.Reports.CustomReports.Models.DiscountSummary;
+using Nop.Plugin.Reports.CustomReports.Models.PromotionSummary;
 using Nop.Plugin.Reports.CustomReports.Models.SearchModels;
 using ILogger = Nop.Services.Logging.ILogger;
 using Microsoft.AspNetCore.Mvc;
@@ -15,13 +15,13 @@ using Nop.Core;
 using Nop.Services.Messages;
 using Nop.Plugin.Reports.CustomReports.Services.Export;
 
-namespace Nop.Plugin.Reports.CustomReports.Controllers.DiscountSummary
+namespace Nop.Plugin.Reports.CustomReports.Controllers.PromotionSummary
 {
-    public class DiscountSummaryController : BaseReportController<EmptySearchModel, DiscountSummaryListModel, DiscountSummaryReportModel>
+    public class PromotionSummaryController : BaseReportController<EmptySearchModel, PromotionSummaryListModel, PromotionSummaryReportModel>
     {
         private readonly ExportReportService _exportReportService;
         private readonly INotificationService _notificationService;
-        public DiscountSummaryController(
+        public PromotionSummaryController(
             BaseReportFactory baseReportFactory,
             IReportsModelFactory reportsModelFactory,
             IPermissionService permissionService,
@@ -30,7 +30,7 @@ namespace Nop.Plugin.Reports.CustomReports.Controllers.DiscountSummary
             ExportReportService exportReportService,
             INotificationService notificationService
             )
-            : base(baseReportFactory, reportsModelFactory, permissionService, logger, "~/Plugins/Reports.CustomReports/Views/DiscountSummary/DiscountSummary.cshtml")
+            : base(baseReportFactory, reportsModelFactory, permissionService, logger, "~/Plugins/Reports.CustomReports/Views/PromotionSummary/PromotionSummary.cshtml")
         {
             _exportReportService = exportReportService;
             _notificationService = notificationService;
@@ -42,12 +42,12 @@ namespace Nop.Plugin.Reports.CustomReports.Controllers.DiscountSummary
             if (!await base.PermissionService.AuthorizeAsync(StandardPermissionProvider.ManageOrders))
                 return AccessDeniedView();
 
-            var data = await base.ReportsModelFactory.FetchDiscountSummaryDataAsync(searchModel);
+            var data = await base.ReportsModelFactory.FetchPromotionSummaryDataAsync(searchModel);
 
             try
             {
-                var bytes = await _exportReportService.ExportDiscountSummaryToXlsAsync(data);
-                return File(bytes, MimeTypes.TextXlsx, "discountsummary.xlsx");
+                var bytes = await _exportReportService.ExportPromotionSummaryToXlsAsync(data);
+                return File(bytes, MimeTypes.TextXlsx, "PromotionSummary.xlsx");
             }
             catch (Exception exc)
             {

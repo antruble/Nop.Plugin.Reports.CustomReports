@@ -8,7 +8,7 @@ using Nop.Core.Domain.Payments;
 using Nop.Core.Domain.Shipping;
 using Nop.Data;
 using Nop.Plugin.Reports.CustomReports.Models.CustomerReports.DiscountModels;
-using Nop.Plugin.Reports.CustomReports.Models.DiscountSummary;
+using Nop.Plugin.Reports.CustomReports.Models.PromotionSummary;
 using Nop.Plugin.Reports.CustomReports.Models.OrderDetails;
 using Nop.Plugin.Reports.CustomReports.Models.OrderSummary;
 using Nop.Plugin.Reports.CustomReports.Models.SearchModels;
@@ -22,6 +22,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using Nop.Plugin.Reports.CustomReports.Models.CustomerId;
 
 
 namespace Nop.Plugin.Reports.CustomReports.Services
@@ -38,6 +39,7 @@ namespace Nop.Plugin.Reports.CustomReports.Services
         private readonly ILocalizationService _localizationService;
         private readonly IOrderReportService _orderReportService;
 
+        private readonly IRepository<Akcio> _promotionRepository;
         private readonly IRepository<Customer> _customerRepository;
         private readonly IRepository<DiscountUsageHistory> _discountUsageHistoryRepository;
         private readonly IRepository<Discount> _discountRepository;
@@ -61,6 +63,7 @@ namespace Nop.Plugin.Reports.CustomReports.Services
                 ILocalizationService localizationService,
                 IOrderReportService orderReportService,
 
+                IRepository<Akcio> promotionRepository,
                 IRepository<Customer> customerRepository,
                 IRepository<DiscountUsageHistory> discountUsageHistoryRepository,
                 IRepository<Discount> discountRepository,
@@ -78,6 +81,7 @@ namespace Nop.Plugin.Reports.CustomReports.Services
             _localizationService = localizationService;
             _orderReportService = orderReportService;
 
+            _promotionRepository = promotionRepository;
             _customerRepository = customerRepository;
             _discountUsageHistoryRepository = discountUsageHistoryRepository;
             _discountRepository = discountRepository;
@@ -402,7 +406,7 @@ namespace Nop.Plugin.Reports.CustomReports.Services
                                 OrderDiscount = Math.Round(g.Sum(x => x.OrderDiscount))
                             };  
 
-                var data = query.ToList();
+                var data = await query.ToListAsync();
 
                 return data;
             }
@@ -452,25 +456,73 @@ namespace Nop.Plugin.Reports.CustomReports.Services
                                 OrderDiscount = Math.Round(g.Sum(x => x.OrderDiscount))
                             };
 
-                var data = query.ToList();
+                var data = await query.ToListAsync();
 
                 return data;
             }
         }
         #endregion
 
-        #region DetailsSummary
-        public async Task<IList<DiscountSummaryReportModel>> GetDiscountSummaryReportModelListAsync(EmptySearchModel searchModel)
+        #region PromotionSummary
+        public async Task<IList<PromotionSummaryReportModel>> GetPromotionSummaryReportModelListAsync(EmptySearchModel searchModel)
         {
-            //var query = from orderItem in _orderItemRepository.Table oi
-            //            join product in _product.Table on order.Id equals orderItem.OrderId
+            //var currentDate = DateTime.UtcNow;
+            var currentDate = new DateTime(2023, 11, 30);
+            // 1. Aktív akciók lekérdezése
+            var activePromotions = await _promotionRepository.Table
+                .Where(p => p.StartDateUtc <= currentDate && p.EndDateUtc >= currentDate)
+                .Select(p => new { p.Id, p.StartDateUtc, p.EndDateUtc })
+                .ToListAsync();
+
+            if (!activePromotions.Any())
+                return new List<PromotionSummaryReportModel>();
+
+            // Legrégebbi akció kezdési dátum
+            var oldestPromotionStartDate = activePromotions.Min(p => p.StartDateUtc);
+
+            var newestPromotionStartDate = activePromotions.Max(p => p.EndDateUtc);
+
+            // 2. OrderItems szűrése az akciókhoz
+            var filteredOrderItems = await (from orderItem in _orderItemRepository.Table
+                                            join order in _orderRepository.Table on orderItem.OrderId equals order.Id
+                                            where order.CreatedOnUtc >= oldestPromotionStartDate && order.CreatedOnUtc <= newestPromotionStartDate && orderItem.AkcioVolt
+                                            select new { orderItem, order.CreatedOnUtc })
+                                   .ToListAsync();
+
+            var activePromotionIds = activePromotions.Select(ap => ap.Id).ToHashSet();
+
+            // 3. Termékek csoportosítása akciók szerint
+            var query = from oi in filteredOrderItems
+                        join p in _productRepository.Table on oi.orderItem.ProductId equals p.Id
+                        where activePromotionIds.Contains(p.AkcioId)
+                        group new { oi.orderItem, p, oi.CreatedOnUtc } by new { p.AkcioId, p.AkcioName } into g
+                        select new PromotionSummaryReportModel
+                        {
+                            Name = g.Key.AkcioName ?? "Unknown",
+                            MonthlyUsageCount = g.Sum(x => x.orderItem.Quantity),
+                            MonthlyTotalDiscountAmount = (int)Math.Round(g.Sum(x => x.orderItem.PriceInclTax)),
+                            DailyUsageCount = 0, // Később töltjük ki
+                            DailyTotalDiscountAmount = 0, // Később töltjük ki
+                            DailyPercentage = 0, // Később töltjük ki
+                            MonthlyPercentage = 0, // Később töltjük ki
+                            MarginAmount = 0, // Később töltjük ki
+                            MarginPercentage = 0 // Később töltjük ki
+                        };
+
+            var result = await query.ToListAsync();
 
 
-            //var data = await query.OrderBy(x => x.NumOfOrders).ToListAsync();
-
-            //return data;//TODO:
-            return new List<DiscountSummaryReportModel>();
+            return result;
         }
+        #endregion
+
+        #region
+
+        public async Task<IList<CustomerIdReportModel>> GetCustomerIdReportModelListAsync(EmptySearchModel searchModel)
+        {
+            return null; //TODO
+        }
+
         #endregion
 
         #endregion

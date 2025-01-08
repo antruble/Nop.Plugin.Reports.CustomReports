@@ -203,6 +203,22 @@ namespace Nop.Plugin.Reports.CustomReports
                 },
                 new
                 {
+                    IsGroup = false,
+                    SystemName = "Reports.PromotionSummary",
+                    Title = await _localizationService.GetResourceAsync("Admin.Reports.PromotionSummary.Title"),
+                    IconClass = "far fa-dot-circle",
+                    ControllerName = "PromotionSummary"
+                },
+                new
+                {
+                    IsGroup = false,
+                    SystemName = "Reports.CustomerId",
+                    Title = await _localizationService.GetResourceAsync("Admin.Reports.CustomerId.Title"),
+                    IconClass = "far fa-dot-circle",
+                    ControllerName = "CustomerId"
+                },
+                new
+                {
                     IsGroup = true,
                     SystemName = "Reports.Problemasak",
                     Title = "Problémás riportok",
@@ -214,12 +230,13 @@ namespace Nop.Plugin.Reports.CustomReports
                         new { SystemName = "Reports.Problemasak.ProblemasProduct", Title = "Problémás termékek", ControllerName = "ProblemasProduct", IconClass = "far fa-dot-circle" },
                     }
                 },
+
                 // További riportok hozzáadása itt...
             };
         }
 
         /// <summary>
-        /// Egy alapértelmezett riport átirányítása egy pluginban definiált controllerre.
+        /// Egy alapértelmezett riport átirányítása egy, a pluginban definiált controllerre.
         /// </summary>
         /// <param name="reportMenuNode">A "Reports" menü csomópontja.</param>
         /// <param name="nopReportName">Az alapértelmezett riport neve.</param>

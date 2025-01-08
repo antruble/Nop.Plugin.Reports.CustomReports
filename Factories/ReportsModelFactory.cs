@@ -23,7 +23,8 @@ using Nop.Web.Framework.Models.Extensions;
 using Nop.Plugin.Reports.CustomReports.Services;
 using Nop.Plugin.Reports.CustomReports.Models.OrderDetails;
 using Nop.Plugin.Reports.CustomReports.Models.OrderSummary;
-using Nop.Plugin.Reports.CustomReports.Models.DiscountSummary;
+using Nop.Plugin.Reports.CustomReports.Models.PromotionSummary;
+using Nop.Plugin.Reports.CustomReports.Models.CustomerId;
 
 namespace Nop.Plugin.Reports.CustomReports.Factories.CustomerReports
 {
@@ -446,18 +447,28 @@ namespace Nop.Plugin.Reports.CustomReports.Factories.CustomerReports
         }
 
         #endregion
-        #region DiscountSummary
-        public async Task<List<DiscountSummaryReportModel>> FetchDiscountSummaryDataAsync(EmptySearchModel searchModel)
+        #region PromotionSummary
+        public async Task<List<PromotionSummaryReportModel>> FetchPromotionSummaryDataAsync(EmptySearchModel searchModel)
         {
             if (searchModel == null)
                 throw new ArgumentNullException(nameof(searchModel));
 
-            var result = await _customReportService.GetDiscountSummaryReportModelListAsync(searchModel);
+            var result = await _customReportService.GetPromotionSummaryReportModelListAsync(searchModel);
             return result.ToList();
         }
 
         #endregion
 
+        #region CustomerId
+        public async Task<List<CustomerIdReportModel>> FetchCustomerIdDataAsync(EmptySearchModel searchModel)
+        {
+            if (searchModel == null)
+                throw new ArgumentNullException(nameof(searchModel));
+
+            var result = await _customReportService.GetCustomerIdReportModelListAsync(searchModel);
+            return result.ToList();
+        }
+        #endregion
         #endregion
     }
 }

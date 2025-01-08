@@ -1,7 +1,7 @@
 ﻿using Nop.Core.Domain.Catalog;
 using Nop.Core.Domain.Orders;
 using Nop.Core.Domain.Shipping;
-using Nop.Plugin.Reports.CustomReports.Models.DiscountSummary;
+using Nop.Plugin.Reports.CustomReports.Models.PromotionSummary;
 using Nop.Plugin.Reports.CustomReports.Models.OrderDetails;
 using Nop.Plugin.Reports.CustomReports.Models.OrderSummary;
 using Nop.Services.ExportImport;
@@ -66,23 +66,23 @@ namespace Nop.Plugin.Reports.CustomReports.Services.Export
 
             return await new CustomPropertyManager<OrderSummaryReportModel>(properties, _catalogSettings).ExportToXlsxAsync(daily, monthly, "Daily", "Monthly");
         }
-        public async Task<byte[]> ExportDiscountSummaryToXlsAsync(IList<DiscountSummaryReportModel> list)
+        public async Task<byte[]> ExportPromotionSummaryToXlsAsync(IList<PromotionSummaryReportModel> list)
         {
             //property array
             var properties = new[]
             {
-                new PropertyByName<DiscountSummaryReportModel>("NÉV", p => p.DiscountName),
-                new PropertyByName<DiscountSummaryReportModel>("NAPI (db)", p => p.DailyUsageCount),
-                new PropertyByName<DiscountSummaryReportModel>("NAPI (nettó)", p => p.DailyTotalDiscountAmount),
-                new PropertyByName<DiscountSummaryReportModel>("NAPI (%)", p => p.DailyPercentage),
-                new PropertyByName<DiscountSummaryReportModel>("HAVI (db)", p => p.MonthlyUsageCount),
-                new PropertyByName<DiscountSummaryReportModel>("HAVI (nettó)", p => p.MonthlyTotalDiscountAmount),
-                new PropertyByName<DiscountSummaryReportModel>("HAVI (%)", p => p.MonthlyPercentage),
-                new PropertyByName<DiscountSummaryReportModel>("MARGIN", p => p.MarginAmount),
-                new PropertyByName<DiscountSummaryReportModel>("MARGIN (%)", p => p.MarginPercentage),
+                new PropertyByName<PromotionSummaryReportModel>("NÉV", p => p.Name),
+                new PropertyByName<PromotionSummaryReportModel>("NAPI (db)", p => p.DailyUsageCount),
+                new PropertyByName<PromotionSummaryReportModel>("NAPI (nettó)", p => p.DailyTotalDiscountAmount),
+                new PropertyByName<PromotionSummaryReportModel>("NAPI (%)", p => p.DailyPercentage),
+                new PropertyByName<PromotionSummaryReportModel>("HAVI (db)", p => p.MonthlyUsageCount),
+                new PropertyByName<PromotionSummaryReportModel>("HAVI (nettó)", p => p.MonthlyTotalDiscountAmount),
+                new PropertyByName<PromotionSummaryReportModel>("HAVI (%)", p => p.MonthlyPercentage),
+                new PropertyByName<PromotionSummaryReportModel>("MARGIN", p => p.MarginAmount),
+                new PropertyByName<PromotionSummaryReportModel>("MARGIN (%)", p => p.MarginPercentage),
             };
 
-            return await new CustomPropertyManager<DiscountSummaryReportModel>(properties, _catalogSettings).ExportToXlsxAsync(list);
+            return await new CustomPropertyManager<PromotionSummaryReportModel>(properties, _catalogSettings).ExportToXlsxAsync(list);
         }
     }
 }

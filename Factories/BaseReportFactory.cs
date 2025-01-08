@@ -4,6 +4,7 @@ using Nop.Core.Domain.Orders;
 using Nop.Core.Domain.Shipping;
 using Nop.Plugin.Reports.CustomReports.Factories.CustomerReports;
 using Nop.Plugin.Reports.CustomReports.Models.Bestsellers;
+using Nop.Plugin.Reports.CustomReports.Models.CustomerId;
 using Nop.Plugin.Reports.CustomReports.Models.CustomerReports.DailyOrders;
 using Nop.Plugin.Reports.CustomReports.Models.CustomerReports.DiscountModels;
 using Nop.Plugin.Reports.CustomReports.Models.CustomerReports.RegisteredCustomers;
@@ -14,6 +15,7 @@ using Nop.Plugin.Reports.CustomReports.Models.OrderSummary;
 using Nop.Plugin.Reports.CustomReports.Models.Problemasak.ProblemasManufacturer;
 using Nop.Plugin.Reports.CustomReports.Models.Problemasak.ProblemasOrder;
 using Nop.Plugin.Reports.CustomReports.Models.Problemasak.ProblemasProduct;
+using Nop.Plugin.Reports.CustomReports.Models.PromotionSummary;
 using Nop.Plugin.Reports.CustomReports.Models.SearchModels;
 using Nop.Services;
 using Nop.Services.Directory;
@@ -156,6 +158,10 @@ namespace Nop.Plugin.Reports.CustomReports.Factories
             //    var result = await BuildProblemasProductSearchModelAsync(new ProblemasProductSearchModel());
             //    return result as TSearchModel;
             //}
+            else if (typeof(TSearchModel) == typeof(EmptySearchModel))
+            {
+                return new EmptySearchModel() as TSearchModel;
+            }
             else
             {
                 return new TSearchModel();
@@ -238,8 +244,25 @@ namespace Nop.Plugin.Reports.CustomReports.Factories
                 case Type reportType when reportType == typeof(OrderSummaryReportModel) && searchModel is OrderSummarySearchModel orderSummarySearchModel:
                     var orderSummaryResult = await _customerReportsModelFactory.FetchOrderSummaryDataAsync(orderSummarySearchModel);
                     return orderSummaryResult.Cast<TReportModel>().ToList();
-                
+
                 #endregion
+
+                #region PromotionSummary
+
+                case Type reportType when reportType == typeof(PromotionSummaryReportModel) && searchModel is EmptySearchModel promotionSummarySearchModel:
+                    var promotionSummaryResult = await _customerReportsModelFactory.FetchPromotionSummaryDataAsync(promotionSummarySearchModel);
+                    return promotionSummaryResult.Cast<TReportModel>().ToList();
+
+                #endregion
+
+                #region CustomerId
+
+                case Type reportType when reportType == typeof(CustomerIdReportModel) && searchModel is EmptySearchModel customerIdSearchModel:
+                    var customerIdResult = await _customerReportsModelFactory.FetchCustomerIdDataAsync(customerIdSearchModel);
+                    return customerIdResult.Cast<TReportModel>().ToList();
+
+                #endregion
+
                 default:
                     throw new InvalidOperationException($"Invalid search model type for {typeof(TReportModel).Name}.");
             }

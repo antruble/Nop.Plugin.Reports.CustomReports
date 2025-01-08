@@ -1,11 +1,11 @@
-@using Nop.Plugin.Reports.CustomReports.Models.DiscountSummary
+@using Nop.Plugin.Reports.CustomReports.Models.PromotionSummary
 @model EmptySearchModel
 @{
     //page title
     Layout = "_AdminLayout";
-    ViewBag.PageTitle = T("Admin.Reports.DiscountSummary").Text;
+    ViewBag.PageTitle = T("Admin.Reports.PromotionSummary").Text;
     //active menu item (system name)
-    NopHtml.SetActiveMenuItemSystemName("DiscountSummary");
+    NopHtml.SetActiveMenuItemSystemName("PromotionSummary");
 }
 
 @{
@@ -17,7 +17,7 @@
 <form asp-controller="Report" asp-action="ExportExcel" method="post">
     <div class="content-header clearfix">
         <h1 class="float-left">
-            @T("Admin.Reports.DiscountSummary")
+            @T("Admin.Reports.PromotionSummary")
         </h1>
         <div class="float-right">
             <button asp-action="ExportExcel" type="submit" name="exportexcel-all">
@@ -42,9 +42,9 @@
                             <div class="search-body @(hideSearchBlock ? "closed" : "")">
                                 <div class="row">
                                     <div class="text-center col-12">
-                                        <button type="button" id="search-discountsummaryreport" class="btn btn-primary btn-search">
+                                        <button type="button" id="search-PromotionSummaryreport" class="btn btn-primary btn-search">
                                             <i class="fas fa-chart-line"></i>
-                                            @T("Admin.Reports.DiscountSummary.RunReport")
+                                            @T("Admin.Reports.PromotionSummary.RunReport")
                                         </button>
                                     </div>
                                 </div>
@@ -58,48 +58,48 @@
 
                             @await Html.PartialAsync("Table", new DataTablesModel
                             {
-                                Name = "discountsummaryreport-grid",
-                                UrlRead = new DataUrl("FetchReport", "DiscountSummary", null),
-                                SearchButtonId = "search-discountsummaryreport",
+                                Name = "PromotionSummaryreport-grid",
+                                UrlRead = new DataUrl("FetchReport", "PromotionSummary", null),
+                                SearchButtonId = "search-PromotionSummaryreport",
                                 Length = Model.PageSize,
                                 LengthMenu = Model.AvailablePageSizes,
                                 ColumnCollection = new List<ColumnProperty>
                                 {
-                                    new ColumnProperty(nameof(DiscountSummaryReportModel.DiscountName))
+                                    new ColumnProperty(nameof(PromotionSummaryReportModel.Name))
                                     {
-                                        Title = T("Admin.Reports.DiscountSummary.Fields.DiscountName").Text
+                                        Title = T("Admin.Reports.PromotionSummary.Fields.Name").Text
                                     },
-                                    new ColumnProperty(nameof(DiscountSummaryReportModel.DailyUsageCount))
+                                    new ColumnProperty(nameof(PromotionSummaryReportModel.DailyUsageCount))
                                     {
-                                        Title = T("Admin.Reports.DiscountSummary.Fields.DailyUsageCount").Text
+                                        Title = T("Admin.Reports.PromotionSummary.Fields.DailyUsageCount").Text
                                     },
-                                    new ColumnProperty(nameof(DiscountSummaryReportModel.DailyTotalDiscountAmount))
+                                    new ColumnProperty(nameof(PromotionSummaryReportModel.DailyTotalDiscountAmount))
                                     {
-                                        Title = T("Admin.Reports.DiscountSummary.Fields.DailyTotalDiscountAmount").Text
+                                        Title = T("Admin.Reports.PromotionSummary.Fields.DailyTotalDiscountAmount").Text
                                     },
-                                    new ColumnProperty(nameof(DiscountSummaryReportModel.DailyPercentage))
+                                    new ColumnProperty(nameof(PromotionSummaryReportModel.DailyPercentage))
                                     {
-                                        Title = T("Admin.Reports.DiscountSummary.Fields.DailyPercentage").Text
+                                        Title = T("Admin.Reports.PromotionSummary.Fields.DailyPercentage").Text
                                     },
-                                    new ColumnProperty(nameof(DiscountSummaryReportModel.MonthlyUsageCount))
+                                    new ColumnProperty(nameof(PromotionSummaryReportModel.MonthlyUsageCount))
                                     {
-                                        Title = T("Admin.Reports.DiscountSummary.Fields.MonthlyUsageCount").Text
+                                        Title = T("Admin.Reports.PromotionSummary.Fields.MonthlyUsageCount").Text
                                     },
-                                    new ColumnProperty(nameof(DiscountSummaryReportModel.MonthlyTotalDiscountAmount))
+                                    new ColumnProperty(nameof(PromotionSummaryReportModel.MonthlyTotalDiscountAmount))
                                     {
-                                        Title = T("Admin.Reports.DiscountSummary.Fields.MonthlyTotalDiscountAmount").Text
+                                        Title = T("Admin.Reports.PromotionSummary.Fields.MonthlyTotalDiscountAmount").Text
                                     },
-                                    new ColumnProperty(nameof(DiscountSummaryReportModel.MonthlyPercentage))
+                                    new ColumnProperty(nameof(PromotionSummaryReportModel.MonthlyPercentage))
                                     {
-                                        Title = T("Admin.Reports.DiscountSummary.Fields.MonthlyPercentage").Text
+                                        Title = T("Admin.Reports.PromotionSummary.Fields.MonthlyPercentage").Text
                                     },
-                                    new ColumnProperty(nameof(DiscountSummaryReportModel.MarginAmount))
+                                    new ColumnProperty(nameof(PromotionSummaryReportModel.MarginAmount))
                                     {
-                                        Title = T("Admin.Reports.DiscountSummary.Fields.MarginAmount").Text
+                                        Title = T("Admin.Reports.PromotionSummary.Fields.MarginAmount").Text
                                     },
-                                    new ColumnProperty(nameof(DiscountSummaryReportModel.MarginPercentage))
+                                    new ColumnProperty(nameof(PromotionSummaryReportModel.MarginPercentage))
                                     {
-                                        Title = T("Admin.Reports.DiscountSummary.Fields.MarginPercentage").Text
+                                        Title = T("Admin.Reports.PromotionSummary.Fields.MarginPercentage").Text
                                     }
                                 }
                            })
