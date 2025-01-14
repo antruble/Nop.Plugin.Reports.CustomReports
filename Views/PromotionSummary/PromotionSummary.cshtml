@@ -14,99 +14,98 @@
     const string hideSearchBlockAttributeName = "OrderDetailsPage.HideSearchBlock";
     var hideSearchBlock = await genericAttributeService.GetAttributeAsync<bool>(await workContext.GetCurrentCustomerAsync(), hideSearchBlockAttributeName);
 }
-<form asp-controller="Report" asp-action="ExportExcel" method="post">
-    <div class="content-header clearfix">
-        <h1 class="float-left">
-            @T("Admin.Reports.PromotionSummary")
-        </h1>
-        <div class="float-right">
+<div class="content-header clearfix">
+    <h1 class="float-left">
+        @T("Admin.Reports.PromotionSummary")
+    </h1>
+    <div class="float-right">
+        <form asp-controller="Report" asp-action="ExportExcel" method="post">
             <button asp-action="ExportExcel" type="submit" name="exportexcel-all">
                 <i class="far fa-file-excel"></i>
                 @T("Admin.Common.ExportToExcel.All")
             </button>
-        </div>
+        </form>
     </div>
+</div>
+<section class="content">
+    <div class="container-fluid">
+        <div class="form-horizontal">
+            <div class="cards-group">
+                <div class="card card-default card-search">
+                    <div class="card-body">
+                        <div class="row search-row @(!hideSearchBlock ? "opened" : "")" data-hideAttribute="@hideSearchBlockAttributeName">
+                            <div class="search-text">@T("Admin.Common.Search")</div>
+                            <div class="icon-search"><i class="fas fa-search" aria-hidden="true"></i></div>
+                            <div class="icon-collapse"><i class="far fa-angle-@(!hideSearchBlock ? "up" : "down")" aria-hidden="true"></i></div>
+                        </div>
 
-    <section class="content">
-        <div class="container-fluid">
-            <div class="form-horizontal">
-                <div class="cards-group">
-                    <div class="card card-default card-search">
-                        <div class="card-body">
-                            <div class="row search-row @(!hideSearchBlock ? "opened" : "")" data-hideAttribute="@hideSearchBlockAttributeName">
-                                <div class="search-text">@T("Admin.Common.Search")</div>
-                                <div class="icon-search"><i class="fas fa-search" aria-hidden="true"></i></div>
-                                <div class="icon-collapse"><i class="far fa-angle-@(!hideSearchBlock ? "up" : "down")" aria-hidden="true"></i></div>
-                            </div>
-
-                            <div class="search-body @(hideSearchBlock ? "closed" : "")">
-                                <div class="row">
-                                    <div class="text-center col-12">
-                                        <button type="button" id="search-PromotionSummaryreport" class="btn btn-primary btn-search">
-                                            <i class="fas fa-chart-line"></i>
-                                            @T("Admin.Reports.PromotionSummary.RunReport")
-                                        </button>
-                                    </div>
+                        <div class="search-body @(hideSearchBlock ? "closed" : "")">
+                            <div class="row">
+                                <div class="text-center col-12">
+                                    <button type="button" id="search-PromotionSummaryreport" class="btn btn-primary btn-search">
+                                        <i class="fas fa-chart-line"></i>
+                                        @T("Admin.Reports.PromotionSummary.RunReport")
+                                    </button>
                                 </div>
                             </div>
                         </div>
                     </div>
+                </div>
 
-                    <div class="card card-default">
-                        <div class="card-body">
-                            <nop-doc-reference asp-string-resource="@T("Admin.Documentation.Reference.Reports", Docs.Reports + Utm.OnAdmin)" />
+                <div class="card card-default">
+                    <div class="card-body">
+                        <nop-doc-reference asp-string-resource="@T("Admin.Documentation.Reference.Reports", Docs.Reports + Utm.OnAdmin)" />
 
-                            @await Html.PartialAsync("Table", new DataTablesModel
+                        @await Html.PartialAsync("Table", new DataTablesModel
+                        {
+                            Name = "PromotionSummaryreport-grid",
+                            UrlRead = new DataUrl("FetchReport", "PromotionSummary", null),
+                            SearchButtonId = "search-PromotionSummaryreport",
+                            Length = Model.PageSize,
+                            LengthMenu = Model.AvailablePageSizes,
+                            ColumnCollection = new List<ColumnProperty>
                             {
-                                Name = "PromotionSummaryreport-grid",
-                                UrlRead = new DataUrl("FetchReport", "PromotionSummary", null),
-                                SearchButtonId = "search-PromotionSummaryreport",
-                                Length = Model.PageSize,
-                                LengthMenu = Model.AvailablePageSizes,
-                                ColumnCollection = new List<ColumnProperty>
+                                new ColumnProperty(nameof(PromotionSummaryReportModel.Name))
                                 {
-                                    new ColumnProperty(nameof(PromotionSummaryReportModel.Name))
-                                    {
-                                        Title = T("Admin.Reports.PromotionSummary.Fields.Name").Text
-                                    },
-                                    new ColumnProperty(nameof(PromotionSummaryReportModel.DailyUsageCount))
-                                    {
-                                        Title = T("Admin.Reports.PromotionSummary.Fields.DailyUsageCount").Text
-                                    },
-                                    new ColumnProperty(nameof(PromotionSummaryReportModel.DailyTotalDiscountAmount))
-                                    {
-                                        Title = T("Admin.Reports.PromotionSummary.Fields.DailyTotalDiscountAmount").Text
-                                    },
-                                    new ColumnProperty(nameof(PromotionSummaryReportModel.DailyPercentage))
-                                    {
-                                        Title = T("Admin.Reports.PromotionSummary.Fields.DailyPercentage").Text
-                                    },
-                                    new ColumnProperty(nameof(PromotionSummaryReportModel.MonthlyUsageCount))
-                                    {
-                                        Title = T("Admin.Reports.PromotionSummary.Fields.MonthlyUsageCount").Text
-                                    },
-                                    new ColumnProperty(nameof(PromotionSummaryReportModel.MonthlyTotalDiscountAmount))
-                                    {
-                                        Title = T("Admin.Reports.PromotionSummary.Fields.MonthlyTotalDiscountAmount").Text
-                                    },
-                                    new ColumnProperty(nameof(PromotionSummaryReportModel.MonthlyPercentage))
-                                    {
-                                        Title = T("Admin.Reports.PromotionSummary.Fields.MonthlyPercentage").Text
-                                    },
-                                    new ColumnProperty(nameof(PromotionSummaryReportModel.MarginAmount))
-                                    {
-                                        Title = T("Admin.Reports.PromotionSummary.Fields.MarginAmount").Text
-                                    },
-                                    new ColumnProperty(nameof(PromotionSummaryReportModel.MarginPercentage))
-                                    {
-                                        Title = T("Admin.Reports.PromotionSummary.Fields.MarginPercentage").Text
-                                    }
+                                    Title = T("Admin.Reports.PromotionSummary.Fields.Name").Text
+                                },
+                                new ColumnProperty(nameof(PromotionSummaryReportModel.DailyUsageCount))
+                                {
+                                    Title = T("Admin.Reports.PromotionSummary.Fields.DailyUsageCount").Text
+                                },
+                                new ColumnProperty(nameof(PromotionSummaryReportModel.DailyTotalDiscountAmount))
+                                {
+                                    Title = T("Admin.Reports.PromotionSummary.Fields.DailyTotalDiscountAmount").Text
+                                },
+                                new ColumnProperty(nameof(PromotionSummaryReportModel.DailyPercentage))
+                                {
+                                    Title = T("Admin.Reports.PromotionSummary.Fields.DailyPercentage").Text
+                                },
+                                new ColumnProperty(nameof(PromotionSummaryReportModel.MonthlyUsageCount))
+                                {
+                                    Title = T("Admin.Reports.PromotionSummary.Fields.MonthlyUsageCount").Text
+                                },
+                                new ColumnProperty(nameof(PromotionSummaryReportModel.MonthlyTotalDiscountAmount))
+                                {
+                                    Title = T("Admin.Reports.PromotionSummary.Fields.MonthlyTotalDiscountAmount").Text
+                                },
+                                new ColumnProperty(nameof(PromotionSummaryReportModel.MonthlyPercentage))
+                                {
+                                    Title = T("Admin.Reports.PromotionSummary.Fields.MonthlyPercentage").Text
+                                },
+                                new ColumnProperty(nameof(PromotionSummaryReportModel.MarginAmount))
+                                {
+                                    Title = T("Admin.Reports.PromotionSummary.Fields.MarginAmount").Text
+                                },
+                                new ColumnProperty(nameof(PromotionSummaryReportModel.MarginPercentage))
+                                {
+                                    Title = T("Admin.Reports.PromotionSummary.Fields.MarginPercentage").Text
                                 }
-                           })
-                        </div>
+                            }
+                        })
                     </div>
                 </div>
             </div>
         </div>
-    </section>
-</form>
+    </div>
+</section>

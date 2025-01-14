@@ -70,7 +70,7 @@ namespace Nop.Plugin.Reports.CustomReports.Factories.CustomerReports
 
         #region CustomerId
 
-        Task<List<CustomerIdReportModel>> FetchCustomerIdDataAsync(EmptySearchModel searchModel);
+        Task<List<CustomerIdReportModel>> FetchCustomerIdDataAsync(SingleDateSearchModel searchModel);
 
         #endregion
     }

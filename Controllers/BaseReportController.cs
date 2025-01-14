@@ -1,4 +1,7 @@
+using FluentMigrator.Runner;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.Extensions.DependencyInjection;
+using Nop.Core.Infrastructure;
 using Nop.Plugin.Reports.CustomReports.Factories;
 using Nop.Plugin.Reports.CustomReports.Factories.CustomerReports;
 using Nop.Services.Security;
@@ -6,6 +9,7 @@ using Nop.Web.Framework;
 using Nop.Web.Framework.Controllers;
 using Nop.Web.Framework.Models;
 using Nop.Web.Framework.Mvc.Filters;
+using System;
 using System.Threading.Tasks;
 using ILogger = Nop.Services.Logging.ILogger;
 
@@ -19,11 +23,11 @@ namespace Nop.Plugin.Reports.CustomReports.Controllers
         where TListModel : BasePagedListModel<TReportModel>, new()
         where TReportModel : BaseNopModel, new()
     {
-        private readonly BaseReportFactory _baseReportFactory;
+        protected readonly BaseReportFactory _baseReportFactory;
         private readonly IReportsModelFactory _reportsModelFactory;
         private readonly IPermissionService _permissionService;
         private readonly ILogger _logger;
-        private readonly string _viewPath;
+        protected readonly string _viewPath;
 
         protected IPermissionService PermissionService => _permissionService;
         protected IReportsModelFactory ReportsModelFactory => _reportsModelFactory;
@@ -48,7 +52,7 @@ namespace Nop.Plugin.Reports.CustomReports.Controllers
         /// Megjeleníti a riporthoz tartozó nézetet az előkészített keresési modellel.
         /// </summary>
         /// <returns>Hozzá tartozó nézet.</returns>
-        public async Task<IActionResult> ShowReport()
+        public virtual async Task<IActionResult> ShowReport()
         {
             if (!await _permissionService.AuthorizeAsync(StandardPermissionProvider.ManageOrders))
                 return AccessDeniedView();
@@ -77,12 +81,18 @@ namespace Nop.Plugin.Reports.CustomReports.Controllers
             return Json(model);
         }
 
-        /// <summary>
-        /// Visszaadja a plugin konfigurációs nézetét.
-        /// </summary>
-        public IActionResult Configure()
-        {
-            return View("~/Plugins/Reports.CustomReports/Views/Configure.cshtml");
-        }
+        ///// <summary>
+        ///// Visszaadja a plugin konfigurációs nézetét.
+        ///// </summary>
+        //[AuthorizeAdmin]
+        //[Area(AreaNames.Admin)]
+        //public IActionResult Configure()
+        //{
+        //    return View("~/Plugins/Reports.CustomReports/Views/Configure.cshtml");
+        //}
+
+        
+
+
     }
 }

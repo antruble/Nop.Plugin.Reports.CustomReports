@@ -11,6 +11,9 @@ using System.Collections.Generic;
 using Nop.Services.Logging;
 using System.Runtime.CompilerServices;
 using Nop.Services.Localization;
+using FluentMigrator.Runner;
+using Microsoft.Extensions.DependencyInjection;
+using Nop.Core.Infrastructure;
 
 namespace Nop.Plugin.Reports.CustomReports
 {
@@ -52,7 +55,16 @@ namespace Nop.Plugin.Reports.CustomReports
         /// </summary>
         public override async Task InstallAsync()
         {
-            await base.InstallAsync();    
+            await base.InstallAsync();
+
+            using (var scope = EngineContext.Current.Resolve<IServiceScopeFactory>().CreateScope())
+            {
+                var runner = scope.ServiceProvider.GetRequiredService<IMigrationRunner>();
+
+                // Csak a megadott migráció futtatása
+                runner.MigrateUp(202501070930);
+            }
+
         }
 
         /// <summary>
@@ -69,7 +81,7 @@ namespace Nop.Plugin.Reports.CustomReports
         /// <returns>A konfigur�ci�s oldal URL-je.</returns>
         public override string GetConfigurationPageUrl()
         {
-            return $"{_webHelper.GetStoreLocation()}/Admin/CustomReports/Configure";
+            return $"{_webHelper.GetStoreLocation()}Admin/CustomReports/Configure";
         }
 
         /// <summary>

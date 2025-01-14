@@ -1,5 +1,5 @@
 @using Nop.Plugin.Reports.CustomReports.Models.CustomerId
-@model EmptySearchModel
+@model SingleDateSearchModel
 
 @{
     //page title
@@ -15,107 +15,256 @@
     const string hideSearchBlockAttributeName = "OrderDetailsPage.HideSearchBlock";
     var hideSearchBlock = await genericAttributeService.GetAttributeAsync<bool>(await workContext.GetCurrentCustomerAsync(), hideSearchBlockAttributeName);
 }
-<form asp-controller="Report" asp-action="ExportExcel" method="post">
-    <div class="content-header clearfix">
-        <h1 class="float-left">
-            @T("Admin.Reports.CustomerId")
-        </h1>
-        <div class="float-right">
+<div class="content-header clearfix">
+    <h1 class="float-left">
+        @T("Admin.Reports.CustomerId")
+    </h1>
+    <div class="float-right d-flex flex-row-reverse justify-content-center align-items-center">
+        <form asp-controller="Report" asp-action="ExportExcel" method="post">
             <button asp-action="ExportExcel" type="submit" name="exportexcel-all">
                 <i class="far fa-file-excel"></i>
                 @T("Admin.Common.ExportToExcel.All")
             </button>
-        </div>
+        </form>
+        <button type="button" data-toggle="modal" data-target="#emailSettingsModal" style="margin: 0 5px">
+            <i class="far fa-file-email"></i>
+            @T("Admin.CustomReports.RegisterScheduledEmails")
+        </button>
     </div>
+</div>
 
-    <section class="content">
-        <div class="container-fluid">
-            <div class="form-horizontal">
-                <div class="cards-group">
-                    <div class="card card-default card-search">
-                        <div class="card-body">
-                            <div class="row search-row @(!hideSearchBlock ? "opened" : "")" data-hideAttribute="@hideSearchBlockAttributeName">
-                                <div class="search-text">@T("Admin.Common.Search")</div>
-                                <div class="icon-search"><i class="fas fa-search" aria-hidden="true"></i></div>
-                                <div class="icon-collapse"><i class="far fa-angle-@(!hideSearchBlock ? "up" : "down")" aria-hidden="true"></i></div>
+<section class="content">
+    <div class="container-fluid">
+        <div class="form-horizontal">
+            <div class="cards-group">
+                <!-- Modal az email beállítához -->
+                <div class="modal fade" id="emailSettingsModal" tabindex="-1" role="dialog" aria-labelledby="emailSettingsModalLabel" aria-hidden="true">
+                    <div class="modal-dialog" role="document">
+                        <div class="modal-content">
+                            <div class="modal-header">
+                                <h5 class="modal-title" id="emailSettingsModalLabel">@T("Admin.Reports.EmailSettings")</h5>
+                                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                                    <span aria-hidden="true">&times;</span>
+                                </button>
                             </div>
+                            <div class="modal-body">
+                                @if (ViewBag.TaskExists)
+                                {
+                                    <form id="emailSettingsForm">
+                                        <nop-antiforgery-token />
+                                        <div class="form-group">
+                                            <label for="emailList">@T("Admin.Reports.EmailAddresses")</label>
+                                            <div class="row">
+                                                <div class="col-11">
+                                                    <input type="email" name="email" id="emailInput" class="form-control"
+                                                           placeholder="@T("Admin.Reports.EmailPlaceholder")" />
 
-                            <div class="search-body @(hideSearchBlock ? "closed" : "")">
-                                @* <div class="row">
-                                    <div class="col-md-5">
-                                        <div class="form-group row">
-                                            <div class="col-md-4">
-                                                <nop-label asp-for="PeriodTypeId" />
+                                                </div>
+                                                <div class="col-1" style="padding:0;">
+                                                    <button type="button" id="addEmailBtn" class="btn btn-outline-success">
+                                                        <i class="fas fa-plus" style="padding:0;"></i>
+                                                    </button>
+                                                </div>
+
                                             </div>
-                                            <div class="col-md-8">
-                                                <nop-select asp-for="PeriodTypeId" asp-items="Model.PeriodTypeOptions" />
-                                            </div>
+                                            <ul id="emailList" class="list-group mt-3">
+                                                <!-- Email címek itt jelennek meg -->
+                                            </ul>
                                         </div>
-
-                                    </div>
-                                </div> *@
-                                <div class="row">
-                                    <div class="text-center col-12">
-                                        <button type="button" id="search-customeridreport" class="btn btn-primary btn-search">
-                                            <i class="fas fa-chart-line"></i>
-                                            @T("Admin.Reports.CustomerId.RunReport")
+                                    </form>
+                                }
+                                else
+                                {
+                                    <form asp-controller="Report" asp-action="AddScheduledTask" method="post">
+                                        <button asp-action="AddScheduledTask" type="submit" name="add-task" class="btn btn-primary">
+                                            <i class="far fa-file-email"></i>
+                                            @T("Admin.Common.AddScheduledTask")
                                         </button>
+                                    </form>
+                                }
+                            </div>
+                            <div class="modal-footer">
+                                <button type="button" class="btn btn-secondary" data-dismiss="modal">@T("Admin.Common.Close")</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+
+                <div class="card card-default card-search">
+                    <div class="card-body">
+                        <div class="row search-row @(!hideSearchBlock ? "opened" : "")" data-hideAttribute="@hideSearchBlockAttributeName">
+                            <div class="search-text">@T("Admin.Common.Search")</div>
+                            <div class="icon-search"><i class="fas fa-search" aria-hidden="true"></i></div>
+                            <div class="icon-collapse"><i class="far fa-angle-@(!hideSearchBlock ? "up" : "down")" aria-hidden="true"></i></div>
+                        </div>
+
+                        <div class="search-body @(hideSearchBlock ? "closed" : "")">
+                            <div class="row">
+                                <div class="form-group row">
+                                    <div class="col-md-4">
+                                        <nop-label asp-for="Date" />
                                     </div>
+                                    <div class="col-md-8">
+                                        <nop-editor asp-for="Date" />
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="row">
+                                <div class="text-center col-12">
+                                    <button type="button" id="search-customeridreport" class="btn btn-primary btn-search">
+                                        <i class="fas fa-chart-line"></i>
+                                        @T("Admin.Reports.CustomerId.RunReport")
+                                    </button>
                                 </div>
                             </div>
                         </div>
                     </div>
+                </div>
 
-                    <div class="card card-default">
-                        <div class="card-body">
-                            <nop-doc-reference asp-string-resource="@T("Admin.Documentation.Reference.Reports", Docs.Reports + Utm.OnAdmin)" />
+                <div class="card card-default">
+                    <div class="card-body">
+                        <nop-doc-reference asp-string-resource="@T("Admin.Documentation.Reference.Reports", Docs.Reports + Utm.OnAdmin)" />
 
-                            @await Html.PartialAsync("Table", new DataTablesModel
+                        @await Html.PartialAsync("Table", new DataTablesModel
+                        {
+                            Name = "customeridreport-grid",
+                            UrlRead = new DataUrl("FetchReport", "CustomerId", null),
+                            SearchButtonId = "search-customeridreport",
+                            Length = Model.PageSize,
+                            LengthMenu = Model.AvailablePageSizes,
+                            Filters = new List<FilterParameter>
                             {
-                                Name = "customeridreport-grid",
-                                UrlRead = new DataUrl("FetchReport", "CustomerId", null),
-                                SearchButtonId = "search-customeridreport",
-                                Length = Model.PageSize,
-                                LengthMenu = Model.AvailablePageSizes,
-                                ColumnCollection = new List<ColumnProperty>
+                                new FilterParameter(nameof(Model.Date), typeof(DateTime?)),
+                            },
+                            ColumnCollection = new List<ColumnProperty>
+                            {
+                                new ColumnProperty(nameof(CustomerIdReportModel.OrderNumber))
                                 {
-                                    new ColumnProperty(nameof(CustomerIdReportModel.OrderNumber))
-                                    {
-                                    Title = T("Admin.Reports.CustomerId.Fields.OrderNumber").Text,
+                                Title = T("Admin.Reports.CustomerId.Fields.OrderNumber").Text,
+                                Width = "100"
+                                },
+                                new ColumnProperty(nameof(CustomerIdReportModel.CustomerId))
+                                {
+                                    Title = T("Admin.Reports.CustomerId.Fields.CustomerId").Text,
+                                    Width = "50"
+                                },
+                                new ColumnProperty(nameof(CustomerIdReportModel.SimplePayTransactionId))
+                                {
+                                    Title = T("Admin.Reports.CustomerId.Fields.SimplePayTransactionId").Text,
                                     Width = "100"
-                                    },
-                                    new ColumnProperty(nameof(CustomerIdReportModel.CustomerId))
-                                    {
-                                        Title = T("Admin.Reports.CustomerId.Fields.CustomerId").Text,
-                                        Width = "50"
-                                    },
-                                    new ColumnProperty(nameof(CustomerIdReportModel.SimplePayTransactionId))
-                                    {
-                                        Title = T("Admin.Reports.CustomerId.Fields.SimplePayTransactionId").Text,
-                                        Width = "100"
-                                    },
-                                    new ColumnProperty(nameof(CustomerIdReportModel.PaymentMethod))
-                                    {
-                                        Title = T("Admin.Reports.CustomerId.Fields.PaymentMethod").Text,
-                                        Width = "100"
-                                    },
-                                    new ColumnProperty(nameof(CustomerIdReportModel.Carrier))
-                                    {
-                                        Title = T("Admin.Reports.CustomerId.Fields.Carrier").Text,
-                                        Width = "100"
-                                    },
-                                    new ColumnProperty(nameof(CustomerIdReportModel.TrackingNumber))
-                                    {
-                                        Title = T("Admin.Reports.CustomerId.Fields.TrackingNumber").Text,
-                                        Width = "100"
-                                    },
-                                }
-                            })
+                                },
+                                new ColumnProperty(nameof(CustomerIdReportModel.PaymentMethod))
+                                {
+                                    Title = T("Admin.Reports.CustomerId.Fields.PaymentMethod").Text,
+                                    Width = "100"
+                                },
+                                new ColumnProperty(nameof(CustomerIdReportModel.Carrier))
+                                {
+                                    Title = T("Admin.Reports.CustomerId.Fields.Carrier").Text,
+                                    Width = "100"
+                                },
+                                new ColumnProperty(nameof(CustomerIdReportModel.TrackingNumber))
+                                {
+                                    Title = T("Admin.Reports.CustomerId.Fields.TrackingNumber").Text,
+                                    Width = "100"
+                                },
+                            }
+                        })
 
-                        </div>
                     </div>
                 </div>
             </div>
         </div>
-    </section>
-</form>
+    </div>
+</section>
+<script>
+
+$(document).ready(function () {
+    const taskId = 1; // Állítsd be a megfelelõ TaskId-t
+    const emailList = $('#emailList');
+    const emailInput = $('#emailInput');
+
+    // Email hozzáadása
+    $('#addEmailBtn').on('click', function () {
+        const email = emailInput.val().trim();
+
+        if (!email) {
+            alert('@T("Admin.Reports.EmailEmptyError")');
+            return;
+        }
+
+        const postData = {
+            taskId: taskId,
+            email: email
+        }
+        addAntiForgeryToken(postData);
+
+        $.ajax({
+            url: '@Url.Action("AddEmailToTask", "CustomerId")',
+            method: 'POST',
+            data: postData,
+            success: function (response) {
+                loadEmailList();
+                emailInput.val('');
+            },
+            error: function (xhr) {
+                alert(xhr.responseText || '@T("Admin.Reports.EmailAddError")');
+            }
+        });
+    });
+
+    // Email törlése
+    emailList.on('click', '.remove-email-btn', function () {
+        const email = $(this).data('email');
+
+        const postData = {
+            taskId: taskId,
+            email: email
+        }
+
+        addAntiForgeryToken(postData);
+
+        $.ajax({
+            url: '@Url.Action("RemoveEmailFromTask", "CustomerId")',
+            method: 'POST',
+            data: postData,
+            success: function (response) {
+                loadEmailList();
+            },
+            error: function (xhr) {
+                alert(xhr.responseText || '@T("Admin.Reports.EmailRemoveError")');
+            }
+        });
+    });
+
+    // Email lista betöltése
+    function loadEmailList() {
+        $.ajax({
+            url: '@Url.Action("GetEmailsByTaskId", "CustomerId")',
+            method: 'GET',
+            data: { taskId },
+            success: function (data) {
+                emailList.empty();
+                data.forEach(email => {
+                    emailList.append(`
+                        <li class="list-group-item d-flex justify-content-between align-items-center">
+                            ${email.Email}
+                            <button class="btn btn-outline-danger btn-sm remove-email-btn" data-email="${email.Email}">
+                                <i class="fa fa-trash" style="padding:0;"></i>
+                            </button>
+                        </li>
+                    `);
+                });
+            },
+            error: function () {
+                alert('@T("Admin.Reports.EmailLoadError")');
+            }
+        });
+    }
+
+    // Email lista inicializálása
+    loadEmailList();
+});
+
+</script>

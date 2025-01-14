@@ -15,152 +15,151 @@
     const string hideSearchBlockAttributeName = "OrderDetailsPage.HideSearchBlock";
     var hideSearchBlock = await genericAttributeService.GetAttributeAsync<bool>(await workContext.GetCurrentCustomerAsync(), hideSearchBlockAttributeName);
 }
-<form asp-controller="Report" asp-action="ExportExcel" method="post">
-    <div class="content-header clearfix">
-        <h1 class="float-left">
-            @T("Admin.Reports.OrderDetails")
-        </h1>
-        <div class="float-right">
+<div class="content-header clearfix">
+    <h1 class="float-left">
+        @T("Admin.Reports.OrderDetails")
+    </h1>
+    <div class="float-right">
+        <form asp-controller="Report" asp-action="ExportExcel" method="post">
             <button asp-action="ExportExcel" type="submit" name="exportexcel-all">
                 <i class="far fa-file-excel"></i>
                 @T("Admin.Common.ExportToExcel.All")
             </button>
-        </div>
+        </form>
     </div>
+</div>
+<section class="content">
+    <div class="container-fluid">
+        <div class="form-horizontal">
+            <div class="cards-group">
+                <div class="card card-default card-search">
+                    <div class="card-body">
+                        <div class="row search-row @(!hideSearchBlock ? "opened" : "")" data-hideAttribute="@hideSearchBlockAttributeName">
+                            <div class="search-text">@T("Admin.Common.Search")</div>
+                            <div class="icon-search"><i class="fas fa-search" aria-hidden="true"></i></div>
+                            <div class="icon-collapse"><i class="far fa-angle-@(!hideSearchBlock ? "up" : "down")" aria-hidden="true"></i></div>
+                        </div>
 
-    <section class="content">
-        <div class="container-fluid">
-            <div class="form-horizontal">
-                <div class="cards-group">
-                    <div class="card card-default card-search">
-                        <div class="card-body">
-                            <div class="row search-row @(!hideSearchBlock ? "opened" : "")" data-hideAttribute="@hideSearchBlockAttributeName">
-                                <div class="search-text">@T("Admin.Common.Search")</div>
-                                <div class="icon-search"><i class="fas fa-search" aria-hidden="true"></i></div>
-                                <div class="icon-collapse"><i class="far fa-angle-@(!hideSearchBlock ? "up" : "down")" aria-hidden="true"></i></div>
-                            </div>
-
-                            <div class="search-body @(hideSearchBlock ? "closed" : "")">
-                                <div class="row">
-                                    <div class="col-md-5">
-                                        <div class="form-group row">
-                                             <div class="col-md-4">
-                                                <nop-label asp-for="StartDate" />
-                                            </div>
-                                            <div class="col-md-8">
-                                                <nop-editor asp-for="StartDate" />
-                                            </div>
+                        <div class="search-body @(hideSearchBlock ? "closed" : "")">
+                            <div class="row">
+                                <div class="col-md-5">
+                                    <div class="form-group row">
+                                            <div class="col-md-4">
+                                            <nop-label asp-for="StartDate" />
                                         </div>
-                                        <div class="form-group row">
-                                            <div class="col-md-4">
-                                                <nop-label asp-for="EndDate" />
-                                            </div>
-                                            <div class="col-md-8">
-                                                <nop-editor asp-for="EndDate" />
-                                            </div>
-                                        </div> 
-                                            @*<div class="form-group row">
-                                            <div class="col-md-4">
-                                                <nop-label asp-for="OrderStatus" />
-                                            </div>
-                                            <div class="col-md-8">
-                                                <nop-select asp-for="OrderStatus" asp-items="Model.OrderStatusOptions" />
-                                            </div>
-                                        </div> 
-                                        <div class="form-group row">
-                                            <div class="col-md-4">
-                                                <nop-label asp-for="PaymentMethodSystemName" />
-                                            </div>
-                                            <div class="col-md-8">
-                                                <nop-select asp-for="PaymentMethodSystemName" asp-items="Model.PaymentOptions" />
-                                            </div>
+                                        <div class="col-md-8">
+                                            <nop-editor asp-for="StartDate" />
                                         </div>
+                                    </div>
+                                    <div class="form-group row">
+                                        <div class="col-md-4">
+                                            <nop-label asp-for="EndDate" />
+                                        </div>
+                                        <div class="col-md-8">
+                                            <nop-editor asp-for="EndDate" />
+                                        </div>
+                                    </div> 
+                                        @*<div class="form-group row">
+                                        <div class="col-md-4">
+                                            <nop-label asp-for="OrderStatus" />
+                                        </div>
+                                        <div class="col-md-8">
+                                            <nop-select asp-for="OrderStatus" asp-items="Model.OrderStatusOptions" />
+                                        </div>
+                                    </div> 
+                                    <div class="form-group row">
+                                        <div class="col-md-4">
+                                            <nop-label asp-for="PaymentMethodSystemName" />
+                                        </div>
+                                        <div class="col-md-8">
+                                            <nop-select asp-for="PaymentMethodSystemName" asp-items="Model.PaymentOptions" />
+                                        </div>
+                                    </div>
 @*                                         <div class="form-group row">
-                                            <div class="col-md-4">
-                                                <nop-label asp-for="ShippingMethod" />
-                                            </div>
-                                            <div class="col-md-8">
-                                                <nop-select asp-for="ShippingMethod" asp-items="Model.ShippingOptions" />
-                                            </div>
-                                        </div> *@
-                                    </div>
+                                        <div class="col-md-4">
+                                            <nop-label asp-for="ShippingMethod" />
+                                        </div>
+                                        <div class="col-md-8">
+                                            <nop-select asp-for="ShippingMethod" asp-items="Model.ShippingOptions" />
+                                        </div>
+                                    </div> *@
                                 </div>
-                                <div class="row">
-                                    <div class="text-center col-12">
-                                        <button type="button" id="search-orderdetailsreport" class="btn btn-primary btn-search">
-                                            <i class="fas fa-chart-line"></i>
-                                            @T("Admin.Reports.OrderDetails.RunReport")
-                                        </button>
-                                    </div>
+                            </div>
+                            <div class="row">
+                                <div class="text-center col-12">
+                                    <button type="button" id="search-orderdetailsreport" class="btn btn-primary btn-search">
+                                        <i class="fas fa-chart-line"></i>
+                                        @T("Admin.Reports.OrderDetails.RunReport")
+                                    </button>
                                 </div>
                             </div>
                         </div>
                     </div>
+                </div>
 
-                    <div class="card card-default">
-                        <div class="card-body">
-                            <nop-doc-reference asp-string-resource="@T("Admin.Documentation.Reference.Reports", Docs.Reports + Utm.OnAdmin)" />
+                <div class="card card-default">
+                    <div class="card-body">
+                        <nop-doc-reference asp-string-resource="@T("Admin.Documentation.Reference.Reports", Docs.Reports + Utm.OnAdmin)" />
 
-                            @await Html.PartialAsync("Table", new DataTablesModel
-                           {
-                               Name = "orderdetailsreport-grid",
-                               UrlRead = new DataUrl("FetchReport", "OrderDetails", null),
-                               SearchButtonId = "search-orderdetailsreport",
-                               Length = Model.PageSize,
-                               LengthMenu = Model.AvailablePageSizes,
-                               Filters = new List<FilterParameter>
-                                {
-                                new FilterParameter(nameof(Model.StartDate), typeof(DateTime?)),
-                                new FilterParameter(nameof(Model.EndDate), typeof(DateTime?)),
-                                // new FilterParameter(nameof(Model.OrderStatus)),
-                                // new FilterParameter(nameof(Model.ShippingMethod)),
-                                // new FilterParameter(nameof(Model.PaymentMethodSystemName))
-                                },
-                               ColumnCollection = new List<ColumnProperty>
+                        @await Html.PartialAsync("Table", new DataTablesModel
+                        {
+                            Name = "orderdetailsreport-grid",
+                            UrlRead = new DataUrl("FetchReport", "OrderDetails", null),
+                            SearchButtonId = "search-orderdetailsreport",
+                            Length = Model.PageSize,
+                            LengthMenu = Model.AvailablePageSizes,
+                            Filters = new List<FilterParameter>
                             {
-                            new ColumnProperty(nameof(OrderDetailsReportModel.OrderId))
-                            {
-                            Title = T("Admin.Reports.OrderDetails.Fields.OrderId").Text
+                            new FilterParameter(nameof(Model.StartDate), typeof(DateTime?)),
+                            new FilterParameter(nameof(Model.EndDate), typeof(DateTime?)),
+                            // new FilterParameter(nameof(Model.OrderStatus)),
+                            // new FilterParameter(nameof(Model.ShippingMethod)),
+                            // new FilterParameter(nameof(Model.PaymentMethodSystemName))
                             },
-                            new ColumnProperty(nameof(OrderDetailsReportModel.Status))
-                            {
-                            Title = T("Admin.Reports.OrderDetails.Fields.Status").Text
-                            },
-                            new ColumnProperty(nameof(OrderDetailsReportModel.FormattedProcessingAvailableDate))
-                            {
-                            Title = T("Admin.Reports.OrderDetails.Fields.ProcessingAvailableDate").Text
-                            },
-                            new ColumnProperty(nameof(OrderDetailsReportModel.FormattedPackageCompletedDate))
-                            {
-                            Title = T("Admin.Reports.OrderDetails.Fields.PackageCompletedDate").Text
-                            },
-                            new ColumnProperty(nameof(OrderDetailsReportModel.FormattedShippedDate))
-                            {
-                            Title = T("Admin.Reports.OrderDetails.Fields.ShippedDate").Text
-                            },
-                            new ColumnProperty(nameof(OrderDetailsReportModel.FormattedDeliveredDate))
-                            {
-                            Title = T("Admin.Reports.OrderDetails.Fields.DeliveredDate").Text
-                            },
-                            new ColumnProperty(nameof(OrderDetailsReportModel.ShippingMethod))
-                            {
-                            Title = T("Admin.Reports.OrderDetails.Fields.ShippingMethod").Text
-                            },
-                            new ColumnProperty(nameof(OrderDetailsReportModel.PaymentMethod))
-                            {
-                            Title = T("Admin.Reports.OrderDetails.Fields.PaymentMethod").Text
-                            },
-                            new ColumnProperty(nameof(OrderDetailsReportModel.FormattedPackagingTime))
-                            {
-                            Title = T("Admin.Reports.OrderDetails.Fields.PackagingTime").Text
-                            }
-                            }
-                           })
+                            ColumnCollection = new List<ColumnProperty>
+                        {
+                        new ColumnProperty(nameof(OrderDetailsReportModel.OrderId))
+                        {
+                        Title = T("Admin.Reports.OrderDetails.Fields.OrderId").Text
+                        },
+                        new ColumnProperty(nameof(OrderDetailsReportModel.Status))
+                        {
+                        Title = T("Admin.Reports.OrderDetails.Fields.Status").Text
+                        },
+                        new ColumnProperty(nameof(OrderDetailsReportModel.FormattedProcessingAvailableDate))
+                        {
+                        Title = T("Admin.Reports.OrderDetails.Fields.ProcessingAvailableDate").Text
+                        },
+                        new ColumnProperty(nameof(OrderDetailsReportModel.FormattedPackageCompletedDate))
+                        {
+                        Title = T("Admin.Reports.OrderDetails.Fields.PackageCompletedDate").Text
+                        },
+                        new ColumnProperty(nameof(OrderDetailsReportModel.FormattedShippedDate))
+                        {
+                        Title = T("Admin.Reports.OrderDetails.Fields.ShippedDate").Text
+                        },
+                        new ColumnProperty(nameof(OrderDetailsReportModel.FormattedDeliveredDate))
+                        {
+                        Title = T("Admin.Reports.OrderDetails.Fields.DeliveredDate").Text
+                        },
+                        new ColumnProperty(nameof(OrderDetailsReportModel.ShippingMethod))
+                        {
+                        Title = T("Admin.Reports.OrderDetails.Fields.ShippingMethod").Text
+                        },
+                        new ColumnProperty(nameof(OrderDetailsReportModel.PaymentMethod))
+                        {
+                        Title = T("Admin.Reports.OrderDetails.Fields.PaymentMethod").Text
+                        },
+                        new ColumnProperty(nameof(OrderDetailsReportModel.FormattedPackagingTime))
+                        {
+                        Title = T("Admin.Reports.OrderDetails.Fields.PackagingTime").Text
+                        }
+                        }
+                        })
 
-                        </div>
                     </div>
                 </div>
             </div>
         </div>
-    </section>
-</form>
+    </div>
+</section>

@@ -11,6 +11,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using Nop.Plugin.Reports.CustomReports.Models.CustomerId;
 
 namespace Nop.Plugin.Reports.CustomReports.Services.Export
 {
@@ -83,6 +84,21 @@ namespace Nop.Plugin.Reports.CustomReports.Services.Export
             };
 
             return await new CustomPropertyManager<PromotionSummaryReportModel>(properties, _catalogSettings).ExportToXlsxAsync(list);
+        }
+        public async Task<byte[]> ExportCustomerIdToXlsAsync(IList<CustomerIdReportModel> list)
+        {
+            //property array
+            var properties = new[]
+            {
+                new PropertyByName<CustomerIdReportModel>("RENDELÉSI SZÁM", p => p.OrderNumber),
+                new PropertyByName<CustomerIdReportModel>("VEVŐ ID", p => p.CustomerId),
+                new PropertyByName<CustomerIdReportModel>("SIMPLEPAY FIZETÉSI ID", p => p.SimplePayTransactionId),
+                new PropertyByName<CustomerIdReportModel>("FIZETÉS MÓDJA", p => p.PaymentMethod),
+                new PropertyByName<CustomerIdReportModel>("FUTÁRCÉG", p => p.Carrier),
+                new PropertyByName<CustomerIdReportModel>("NYOMKÖVETÉSI SZÁM", p => p.TrackingNumber),
+            };
+
+            return await new CustomPropertyManager<CustomerIdReportModel>(properties, _catalogSettings).ExportToXlsxAsync(list);
         }
     }
 }

@@ -152,6 +152,10 @@ namespace Nop.Plugin.Reports.CustomReports.Factories
                 var result = await BuildOrderSummarySearchModelAsync(new OrderSummarySearchModel());
                 return result as TSearchModel;
             }
+            else if (typeof(TSearchModel) == typeof(SingleDateSearchModel))
+            {
+                return new SingleDateSearchModel() as TSearchModel;
+            }
             // További search model építési metódusok helye...
             //else if (typeof(TSearchModel) == typeof(ProblemasProductSearchModel))
             //{
@@ -257,7 +261,7 @@ namespace Nop.Plugin.Reports.CustomReports.Factories
 
                 #region CustomerId
 
-                case Type reportType when reportType == typeof(CustomerIdReportModel) && searchModel is EmptySearchModel customerIdSearchModel:
+                case Type reportType when reportType == typeof(CustomerIdReportModel) && searchModel is SingleDateSearchModel customerIdSearchModel:
                     var customerIdResult = await _customerReportsModelFactory.FetchCustomerIdDataAsync(customerIdSearchModel);
                     return customerIdResult.Cast<TReportModel>().ToList();
 

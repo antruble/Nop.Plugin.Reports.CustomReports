@@ -6,6 +6,8 @@ using Nop.Plugin.Reports.CustomReports.Factories;
 using Nop.Plugin.Reports.CustomReports.Factories.CustomerReports;
 using Nop.Plugin.Reports.CustomReports.Services;
 using Nop.Plugin.Reports.CustomReports.Services.Export;
+using Nop.Plugin.Reports.CustomReports.Tasks;
+using Nop.Services.ScheduleTasks;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -30,6 +32,8 @@ namespace Nop.Plugin.Reports.CustomReports.Infrastructure
             services.AddScoped<IReportsModelFactory, ReportsModelFactory>();
             services.AddScoped<CustomReportService>();
             services.AddScoped<ExportReportService>();
+            services.AddScoped<IScheduleTask, SendEmailTask>();
+            services.AddScoped<ITaskEmailMappingService, TaskEmailMappingService>();
         }
 
         /// <summary>

@@ -23,9 +23,9 @@ namespace Nop.Plugin.Reports.CustomReports.Infrastructure
             logger.LogInformation("Regisztrálva: ExtendedBestsellersReport");
 
             endpointRouteBuilder.MapControllerRoute(
-    name: "TestExtendedReport",
-    pattern: "Admin/Test/ExtendedReport",
-    defaults: new { controller = "ExtendedReport", action = "Bestsellers", area = "Admin" });
+                name: "TestExtendedReport",
+                pattern: "Admin/Test/ExtendedReport",
+                defaults: new { controller = "ExtendedReport", action = "Bestsellers", area = "Admin" });
 
 
             // Felülírjuk az eredeti útvonalat az új controller-re
@@ -33,6 +33,12 @@ namespace Nop.Plugin.Reports.CustomReports.Infrastructure
                 name: "ExtendedBestsellersReport",
                 pattern: "Admin/Report/Bestsellers",
                 defaults: new { controller = "ExtendedReport", action = "Bestsellers", area = "Admin" });
+
+            // Új Configure útvonal
+            endpointRouteBuilder.MapControllerRoute(
+                name: "ConfigureCustomReports",
+                pattern: "Admin/CustomReports/Configure",
+                defaults: new { controller = "ReportHelper", action = "Configure", area = "Admin" });
         }
 
         /// <summary>

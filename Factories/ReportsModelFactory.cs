@@ -460,7 +460,7 @@ namespace Nop.Plugin.Reports.CustomReports.Factories.CustomerReports
         #endregion
 
         #region CustomerId
-        public async Task<List<CustomerIdReportModel>> FetchCustomerIdDataAsync(EmptySearchModel searchModel)
+        public async Task<List<CustomerIdReportModel>> FetchCustomerIdDataAsync(SingleDateSearchModel searchModel)
         {
             if (searchModel == null)
                 throw new ArgumentNullException(nameof(searchModel));
@@ -469,6 +469,7 @@ namespace Nop.Plugin.Reports.CustomReports.Factories.CustomerReports
             return result.ToList();
         }
         #endregion
+
         #endregion
     }
 }

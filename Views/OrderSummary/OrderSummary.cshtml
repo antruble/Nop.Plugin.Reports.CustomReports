@@ -15,141 +15,142 @@
     const string hideSearchBlockAttributeName = "OrderDetailsPage.HideSearchBlock";
     var hideSearchBlock = await genericAttributeService.GetAttributeAsync<bool>(await workContext.GetCurrentCustomerAsync(), hideSearchBlockAttributeName);
 }
-<form asp-controller="Report" asp-action="ExportExcel" method="post">
-    <div class="content-header clearfix">
-        <h1 class="float-left">
-            @T("Admin.Reports.OrderSummary")
-        </h1>
-        <div class="float-right">
+
+<div class="content-header clearfix">
+    <h1 class="float-left">
+        @T("Admin.Reports.OrderSummary")
+    </h1>
+    <div class="float-right">
+        <form asp-controller="Report" asp-action="ExportExcel" method="post">
             <button asp-action="ExportExcel" type="submit" name="exportexcel-all">
                 <i class="far fa-file-excel"></i>
                 @T("Admin.Common.ExportToExcel.All")
             </button>
-        </div>
+        </form>
     </div>
+</div>
 
-    <section class="content">
-        <div class="container-fluid">
-            <div class="form-horizontal">
-                <div class="cards-group">
-                    <div class="card card-default card-search">
-                        <div class="card-body">
-                            <div class="row search-row @(!hideSearchBlock ? "opened" : "")" data-hideAttribute="@hideSearchBlockAttributeName">
-                                <div class="search-text">@T("Admin.Common.Search")</div>
-                                <div class="icon-search"><i class="fas fa-search" aria-hidden="true"></i></div>
-                                <div class="icon-collapse"><i class="far fa-angle-@(!hideSearchBlock ? "up" : "down")" aria-hidden="true"></i></div>
-                            </div>
+<section class="content">
+    <div class="container-fluid">
+        <div class="form-horizontal">
+            <div class="cards-group">
+                <div class="card card-default card-search">
+                    <div class="card-body">
+                        <div class="row search-row @(!hideSearchBlock ? "opened" : "")" data-hideAttribute="@hideSearchBlockAttributeName">
+                            <div class="search-text">@T("Admin.Common.Search")</div>
+                            <div class="icon-search"><i class="fas fa-search" aria-hidden="true"></i></div>
+                            <div class="icon-collapse"><i class="far fa-angle-@(!hideSearchBlock ? "up" : "down")" aria-hidden="true"></i></div>
+                        </div>
 
-                            <div class="search-body @(hideSearchBlock ? "closed" : "")">
-                                <div class="row">
-                                    <div class="col-md-5">
-                                        <div class="form-group row">
-                                            <div class="col-md-4">
-                                                <nop-label asp-for="PeriodTypeId" />
-                                            </div>
-                                            <div class="col-md-8">
-                                                <nop-select asp-for="PeriodTypeId" asp-items="Model.PeriodTypeOptions" />
-                                            </div>
-                                        </div> 
+                        <div class="search-body @(hideSearchBlock ? "closed" : "")">
+                            <div class="row">
+                                <div class="col-md-5">
+                                    <div class="form-group row">
+                                        <div class="col-md-4">
+                                            <nop-label asp-for="PeriodTypeId" />
+                                        </div>
+                                        <div class="col-md-8">
+                                            <nop-select asp-for="PeriodTypeId" asp-items="Model.PeriodTypeOptions" />
+                                        </div>
+                                    </div> 
                                         
-                                    </div>
                                 </div>
-                                <div class="row">
-                                    <div class="text-center col-12">
-                                        <button type="button" id="search-ordersummaryreport" class="btn btn-primary btn-search">
-                                            <i class="fas fa-chart-line"></i>
-                                            @T("Admin.Reports.OrderSummary.RunReport")
-                                        </button>
-                                    </div>
+                            </div>
+                            <div class="row">
+                                <div class="text-center col-12">
+                                    <button type="button" id="search-ordersummaryreport" class="btn btn-primary btn-search">
+                                        <i class="fas fa-chart-line"></i>
+                                        @T("Admin.Reports.OrderSummary.RunReport")
+                                    </button>
                                 </div>
                             </div>
                         </div>
                     </div>
+                </div>
 
-                    <div class="card card-default">
-                        <div class="card-body">
-                            <nop-doc-reference asp-string-resource="@T("Admin.Documentation.Reference.Reports", Docs.Reports + Utm.OnAdmin)" />
+                <div class="card card-default">
+                    <div class="card-body">
+                        <nop-doc-reference asp-string-resource="@T("Admin.Documentation.Reference.Reports", Docs.Reports + Utm.OnAdmin)" />
 
-                            @await Html.PartialAsync("Table", new DataTablesModel
+                        @await Html.PartialAsync("Table", new DataTablesModel
+                        {
+                            Name = "ordersummaryreport-grid",
+                            UrlRead = new DataUrl("FetchReport", "OrderSummary", null),
+                            SearchButtonId = "search-ordersummaryreport",
+                            Length = Model.PageSize,
+                            LengthMenu = Model.AvailablePageSizes,
+                            Filters = new List<FilterParameter>
                             {
-                                Name = "ordersummaryreport-grid",
-                                UrlRead = new DataUrl("FetchReport", "OrderSummary", null),
-                                SearchButtonId = "search-ordersummaryreport",
-                                Length = Model.PageSize,
-                                LengthMenu = Model.AvailablePageSizes,
-                                Filters = new List<FilterParameter>
+                                new FilterParameter(nameof(Model.PeriodTypeId))
+                            },
+                            ColumnCollection = new List<ColumnProperty>
+                            {
+                                new ColumnProperty(nameof(OrderSummaryReportModel.Period))
                                 {
-                                    new FilterParameter(nameof(Model.PeriodTypeId))
+                                    Title = T("Admin.Reports.OrderSummary.Fields.Period").Text,
+                                    Width = "100"
                                 },
-                                ColumnCollection = new List<ColumnProperty>
+                                new ColumnProperty(nameof(OrderSummaryReportModel.NumOfOrders))
                                 {
-                                    new ColumnProperty(nameof(OrderSummaryReportModel.Period))
-                                    {
-                                        Title = T("Admin.Reports.OrderSummary.Fields.Period").Text,
-                                        Width = "100"
-                                    },
-                                    new ColumnProperty(nameof(OrderSummaryReportModel.NumOfOrders))
-                                    {
-                                        Title = T("Admin.Reports.OrderSummary.Fields.NumOfOrders").Text,
-                                        Width = "50"
-                                    },
-                                    new ColumnProperty(nameof(OrderSummaryReportModel.TotalQuantity))
-                                    {
-                                        Title = T("Admin.Reports.OrderSummary.Fields.TotalQuantity").Text,
-                                        Width = "100"
-                                    },
-                                    new ColumnProperty(nameof(OrderSummaryReportModel.QuantityPerOrder))
-                                    {
-                                        Title = T("Admin.Reports.OrderSummary.Fields.QuantityPerOrder").Text,
-                                        Width = "100"
-                                    },
-                                    new ColumnProperty(nameof(OrderSummaryReportModel.OrderSubtotalInclTax))
-                                    {
-                                        Title = T("Admin.Reports.OrderSummary.Fields.OrderSubtotalInclTax").Text,
-                                        Width = "100"
-                                    },
-                                    new ColumnProperty(nameof(OrderSummaryReportModel.SubTotalPerOrder))
-                                    {
-                                        Title = T("Admin.Reports.OrderSummary.Fields.SubTotalPerOrder").Text,
-                                        Width = "100"
-                                    },
-                                    new ColumnProperty(nameof(OrderSummaryReportModel.OrderSubtotalExclTax))
-                                    {
-                                        Title = T("Admin.Reports.OrderSummary.Fields.OrderSubtotalExlTax").Text,
-                                        Width = "100"
-                                    },
-                                    new ColumnProperty(nameof(OrderSummaryReportModel.OrderSubtotalDiscountInclTax))
-                                    {
-                                        Title = T("Admin.Reports.OrderSummary.Fields.OrderSubtotalDiscountInclTax").Text,
-                                        Width = "100"
-                                    },
-                                    new ColumnProperty(nameof(OrderSummaryReportModel.OrderShippingInclTax))
-                                    {
-                                        Title = T("Admin.Reports.OrderSummary.Fields.OrderShippingInclTax").Text,
-                                        Width = "100"
-                                    },
-                                    new ColumnProperty(nameof(OrderSummaryReportModel.PaymentMethodAdditionalFeeInclTax))
-                                    {
-                                        Title = T("Admin.Reports.OrderSummary.Fields.PaymentMethodAdditionalFeeInclTax").Text,
-                                        Width = "100"
-                                    },
-                                    new ColumnProperty(nameof(OrderSummaryReportModel.OrderTax))
-                                    {
-                                        Title = T("Admin.Reports.OrderSummary.Fields.OrderTax").Text,
-                                        Width = "100"
-                                    },
-                                    new ColumnProperty(nameof(OrderSummaryReportModel.OrderTotal))
-                                    {
-                                        Title = T("Admin.Reports.OrderSummary.Fields.OrderTotal").Text,
-                                        Width = "100"
-                                    },
-                                }
-                            })
+                                    Title = T("Admin.Reports.OrderSummary.Fields.NumOfOrders").Text,
+                                    Width = "50"
+                                },
+                                new ColumnProperty(nameof(OrderSummaryReportModel.TotalQuantity))
+                                {
+                                    Title = T("Admin.Reports.OrderSummary.Fields.TotalQuantity").Text,
+                                    Width = "100"
+                                },
+                                new ColumnProperty(nameof(OrderSummaryReportModel.QuantityPerOrder))
+                                {
+                                    Title = T("Admin.Reports.OrderSummary.Fields.QuantityPerOrder").Text,
+                                    Width = "100"
+                                },
+                                new ColumnProperty(nameof(OrderSummaryReportModel.OrderSubtotalInclTax))
+                                {
+                                    Title = T("Admin.Reports.OrderSummary.Fields.OrderSubtotalInclTax").Text,
+                                    Width = "100"
+                                },
+                                new ColumnProperty(nameof(OrderSummaryReportModel.SubTotalPerOrder))
+                                {
+                                    Title = T("Admin.Reports.OrderSummary.Fields.SubTotalPerOrder").Text,
+                                    Width = "100"
+                                },
+                                new ColumnProperty(nameof(OrderSummaryReportModel.OrderSubtotalExclTax))
+                                {
+                                    Title = T("Admin.Reports.OrderSummary.Fields.OrderSubtotalExlTax").Text,
+                                    Width = "100"
+                                },
+                                new ColumnProperty(nameof(OrderSummaryReportModel.OrderSubtotalDiscountInclTax))
+                                {
+                                    Title = T("Admin.Reports.OrderSummary.Fields.OrderSubtotalDiscountInclTax").Text,
+                                    Width = "100"
+                                },
+                                new ColumnProperty(nameof(OrderSummaryReportModel.OrderShippingInclTax))
+                                {
+                                    Title = T("Admin.Reports.OrderSummary.Fields.OrderShippingInclTax").Text,
+                                    Width = "100"
+                                },
+                                new ColumnProperty(nameof(OrderSummaryReportModel.PaymentMethodAdditionalFeeInclTax))
+                                {
+                                    Title = T("Admin.Reports.OrderSummary.Fields.PaymentMethodAdditionalFeeInclTax").Text,
+                                    Width = "100"
+                                },
+                                new ColumnProperty(nameof(OrderSummaryReportModel.OrderTax))
+                                {
+                                    Title = T("Admin.Reports.OrderSummary.Fields.OrderTax").Text,
+                                    Width = "100"
+                                },
+                                new ColumnProperty(nameof(OrderSummaryReportModel.OrderTotal))
+                                {
+                                    Title = T("Admin.Reports.OrderSummary.Fields.OrderTotal").Text,
+                                    Width = "100"
+                                },
+                            }
+                        })
 
-                        </div>
                     </div>
                 </div>
             </div>
         </div>
-    </section>
-</form>
+    </div>
+</section>

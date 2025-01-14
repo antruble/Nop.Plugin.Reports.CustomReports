@@ -14,7 +14,7 @@ namespace Nop.Plugin.Reports.CustomReports.Models.CustomerId
         public string OrderNumber { get; set; } // Rendelési szám
 
         [NopResourceDisplayName("Admin.Reports.CustomerId.Fields.CustomerId")]
-        public int CustomerId { get; set; } // Vevő ID (az, amit küld a rendszer az IF-en)
+        public string CustomerId { get; set; } // Vevő ID (az, amit küld a rendszer az IF-en)
 
         [NopResourceDisplayName("Admin.Reports.CustomerId.Fields.SimplePayTransactionId")]
         public string SimplePayTransactionId { get; set; } // SimplePay fizetési azonosító

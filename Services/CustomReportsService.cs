@@ -516,11 +516,31 @@ namespace Nop.Plugin.Reports.CustomReports.Services
         }
         #endregion
 
-        #region
+        #region CustomerId
 
-        public async Task<IList<CustomerIdReportModel>> GetCustomerIdReportModelListAsync(EmptySearchModel searchModel)
+        public async Task<IList<CustomerIdReportModel>> GetCustomerIdReportModelListAsync(SingleDateSearchModel searchModel)
         {
-            return null; //TODO
+
+            var referenceDate = searchModel.Date ?? DateTime.UtcNow;
+            //var referenceDate = new DateTime(2023, 3, 3).Date;
+            var oneMonthAgo = referenceDate.AddDays(-30).Date;
+
+            var query = from o in _orderRepository.Table
+                        join c in _customerRepository.Table on o.CustomerId equals c.Id
+                        join s in _shipmentRepository.Table on o.Id equals s.OrderId
+                        where o.CreatedOnUtc >= oneMonthAgo && o.CreatedOnUtc < referenceDate
+                                && !o.TesztRendeles
+                        select new CustomerIdReportModel
+                        {
+                            OrderNumber = o.CustomOrderNumber,
+                            CustomerId = c.CustomerGuid.ToString(), //TODO: Ennek másnak kell lennnie (amit küld a BCnek cím Id)
+                            SimplePayTransactionId = "N/A",
+                            PaymentMethod = o.PaymentMethodSystemName,
+                            Carrier = o.ShippingMethod,
+                            TrackingNumber = s.TrackingNumber
+                        };
+
+            return await query.ToListAsync();
         }
 
         #endregion

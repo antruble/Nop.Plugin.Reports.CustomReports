@@ -1,3 +1,22 @@
 @{
     Layout = "_ConfigurePlugin";
 }
+
+@if (TempData["ErrorMessage"] != null)
+{
+    <div class="alert alert-danger">
+        @TempData["ErrorMessage"]
+    </div>
+}
+
+
+<form method="post" asp-controller="ReportHelper" asp-action="RunMigration">
+    <button type="submit" class="btn btn-primary">Futtasd a migrációt</button>
+</form>
+
+@if (TempData["SuccessMessage"] != null)
+{
+    <div class="alert alert-success">
+        @TempData["SuccessMessage"]
+    </div>
+}
