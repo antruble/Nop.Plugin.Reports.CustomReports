@@ -17,6 +17,9 @@ namespace Nop.Plugin.Reports.CustomReports.Tasks
 {
     public class SendEmailTask : IScheduleTask
     {
+
+        #region Fields
+
         private readonly ExportReportService _exportReportService;
         private readonly EmailAccountSettings _emailAccountSettings;
         private readonly IReportsModelFactory _reportsModelFactory;
@@ -25,6 +28,10 @@ namespace Nop.Plugin.Reports.CustomReports.Tasks
         private readonly INotificationService _notificationService;
         private readonly ITaskEmailMappingService _taskEmailMappingService;
         private readonly ILogger _logger;
+
+        #endregion
+
+        #region Ctor
 
         public SendEmailTask(
             ExportReportService exportReportService,
@@ -46,19 +53,26 @@ namespace Nop.Plugin.Reports.CustomReports.Tasks
             _logger = logger;
         }
 
+        #endregion
+
+        /// <summary>
+        /// Feladat végrehajtásáért felelős metódus, amely egy Excel riportot generál, és elküldi azt emailben a hozzárendelt címzetteknek.
+        /// </summary>
         public async Task ExecuteAsync()
         {
             try
             {
-                // Excel generálása
+                // 1. Excel riport generálása
+
                 string filePath = string.Empty;
                 try
                 {
-                    var excelData = await _reportsModelFactory.FetchCustomerIdDataAsync(new SingleDateSearchModel());
+                    // Riport adatok lekérése és exportálása Excel formátumba
+                    var excelData = await _reportsModelFactory.FetchCustomerIdDataAsync(new SingleDateSearchModel { Date = new DateTime(2024, 01, 01) });
                     var bytes = await _exportReportService.ExportCustomerIdToXlsAsync(excelData);
 
+                    // Fájl mentése az ideiglenes mappába
                     filePath = Path.Combine(Path.GetTempPath(), "CustomerIdReport.xlsx");
-
                     await System.IO.File.WriteAllBytesAsync(filePath, bytes);
                 }
                 catch (Exception ex)
@@ -67,8 +81,8 @@ namespace Nop.Plugin.Reports.CustomReports.Tasks
                     return;
                 }
 
-                // Email címek lekérdezése
-                var emailRecords = await _taskEmailMappingService.GetEmailsByTaskIdAsync(1);
+                // 2. Email címek lekérdezése a hozzárendelt Task ID alapján
+                var emailRecords = await _taskEmailMappingService.GetEmailsByTaskIdAsync(1); // Ideiglenesen csak be van égetve az 1-es TaskId, mivel még csak 1 darab beégetett Task van fix 1-es ID-val
 
                 if (!emailRecords.Any())
                 {
@@ -76,8 +90,10 @@ namespace Nop.Plugin.Reports.CustomReports.Tasks
                     return;
                 }
 
-                var defaultEmailAccount = await _emailAccountService.GetEmailAccountByIdAsync(3);
-                //var defaultEmailAccount = await _emailAccountService.GetEmailAccountByIdAsync(_emailAccountSettings.DefaultEmailAccountId);
+                // 3. Alapértelmezett email fiók lekérése és ellenőrzése
+
+                //var defaultEmailAccount = await _emailAccountService.GetEmailAccountByIdAsync(3);  TESTER EMAIL
+                var defaultEmailAccount = await _emailAccountService.GetEmailAccountByIdAsync(_emailAccountSettings.DefaultEmailAccountId);
 
                 if (defaultEmailAccount == null)
                 {
@@ -85,7 +101,8 @@ namespace Nop.Plugin.Reports.CustomReports.Tasks
                     return;
                 }
 
-                // Email küldése minden címzettnek
+                // 4. Email küldése a címzetteknek
+
                 foreach (var record in emailRecords)
                 {
                     var email = new QueuedEmail
@@ -95,7 +112,7 @@ namespace Nop.Plugin.Reports.CustomReports.Tasks
                         FromName = defaultEmailAccount.DisplayName,
                         To = record.Email,
                         Subject = "Customer ID report",
-                        Body = $"{DateTime.UtcNow.AddDays(-1)}. Customer ID riport",
+                        Body = $"{DateTime.UtcNow}. Customer ID riport",
                         CreatedOnUtc = DateTime.UtcNow,
                         EmailAccountId = defaultEmailAccount.Id,
                         AttachmentFilePath = filePath

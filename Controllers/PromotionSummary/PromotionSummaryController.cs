@@ -37,7 +37,7 @@ namespace Nop.Plugin.Reports.CustomReports.Controllers.PromotionSummary
         }
         [HttpPost, ActionName("ExportExcel")]
         [FormValueRequired("exportexcel-all")]
-        public async Task<IActionResult> ExportExcelAll(EmptySearchModel searchModel)
+        public async Task<IActionResult> ExportExcelAll(PromotionSummarySearchModel searchModel)
         {
             if (!await base.PermissionService.AuthorizeAsync(StandardPermissionProvider.ManageOrders))
                 return AccessDeniedView();

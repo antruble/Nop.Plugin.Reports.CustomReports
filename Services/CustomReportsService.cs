@@ -23,6 +23,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using Nop.Plugin.Reports.CustomReports.Models.CustomerId;
+using Nop.Core.Domain.Common;
 
 
 namespace Nop.Plugin.Reports.CustomReports.Services
@@ -40,13 +41,17 @@ namespace Nop.Plugin.Reports.CustomReports.Services
         private readonly IOrderReportService _orderReportService;
 
         private readonly IRepository<Akcio> _promotionRepository;
+        private readonly IRepository<Address> _addressRepository;
         private readonly IRepository<Customer> _customerRepository;
         private readonly IRepository<DiscountUsageHistory> _discountUsageHistoryRepository;
         private readonly IRepository<Discount> _discountRepository;
         private readonly IRepository<Order> _orderRepository;
         private readonly IRepository<OrderItem> _orderItemRepository;
         private readonly IRepository<OrderNote> _orderNoteRepository;
+        private readonly IRepository<Manufacturer> _manufacturerRepository;
         private readonly IRepository<Product> _productRepository;
+        private readonly IRepository<ProductCategory> _productCategoryMappingRepository;
+        private readonly IRepository<ProductManufacturer> _productManufacturerMappingRepository;
         private readonly IRepository<Shipment> _shipmentRepository;
 
         private readonly IWorkContext _workContext;
@@ -64,13 +69,17 @@ namespace Nop.Plugin.Reports.CustomReports.Services
                 IOrderReportService orderReportService,
 
                 IRepository<Akcio> promotionRepository,
+                IRepository<Address> addressRepository,
                 IRepository<Customer> customerRepository,
                 IRepository<DiscountUsageHistory> discountUsageHistoryRepository,
                 IRepository<Discount> discountRepository,
                 IRepository<Order> orderRepository,
                 IRepository<OrderItem> orderItemRepository,
                 IRepository<OrderNote> orderNoteRepository,
+                IRepository<Manufacturer> manufacturerRepository,
                 IRepository<Product> productRepository,
+                IRepository<ProductCategory> productCategoryMappingRepository,
+                IRepository<ProductManufacturer> productManufacturerMappingRepository,
                 IRepository<Shipment> shipmentRepository,
 
                 IWorkContext workContext,
@@ -81,6 +90,7 @@ namespace Nop.Plugin.Reports.CustomReports.Services
             _localizationService = localizationService;
             _orderReportService = orderReportService;
 
+            _addressRepository = addressRepository;
             _promotionRepository = promotionRepository;
             _customerRepository = customerRepository;
             _discountUsageHistoryRepository = discountUsageHistoryRepository;
@@ -88,7 +98,10 @@ namespace Nop.Plugin.Reports.CustomReports.Services
             _orderRepository = orderRepository;
             _orderItemRepository = orderItemRepository;
             _orderNoteRepository = orderNoteRepository;
+            _manufacturerRepository = manufacturerRepository;
             _productRepository = productRepository;
+            _productCategoryMappingRepository = productCategoryMappingRepository;
+            _productManufacturerMappingRepository = productManufacturerMappingRepository;
             _shipmentRepository = shipmentRepository;
 
             _workContext = workContext;
@@ -464,10 +477,12 @@ namespace Nop.Plugin.Reports.CustomReports.Services
         #endregion
 
         #region PromotionSummary
-        public async Task<IList<PromotionSummaryReportModel>> GetPromotionSummaryReportModelListAsync(EmptySearchModel searchModel)
+        public async Task<IList<PromotionSummaryReportModel>> GetPromotionSummaryReportModelListAsync(PromotionSummarySearchModel searchModel)
         {
             //var currentDate = DateTime.UtcNow;
             var currentDate = new DateTime(2023, 11, 30);
+
+
             // 1. Aktív akciók lekérdezése
             var activePromotions = await _promotionRepository.Table
                 .Where(p => p.StartDateUtc <= currentDate && p.EndDateUtc >= currentDate)
@@ -480,39 +495,88 @@ namespace Nop.Plugin.Reports.CustomReports.Services
             // Legrégebbi akció kezdési dátum
             var oldestPromotionStartDate = activePromotions.Min(p => p.StartDateUtc);
 
-            var newestPromotionStartDate = activePromotions.Max(p => p.EndDateUtc);
-
             // 2. OrderItems szűrése az akciókhoz
             var filteredOrderItems = await (from orderItem in _orderItemRepository.Table
                                             join order in _orderRepository.Table on orderItem.OrderId equals order.Id
-                                            where order.CreatedOnUtc >= oldestPromotionStartDate && order.CreatedOnUtc <= newestPromotionStartDate && orderItem.AkcioVolt
+                                            where order.CreatedOnUtc >= oldestPromotionStartDate && orderItem.AkcioVolt
                                             select new { orderItem, order.CreatedOnUtc })
                                    .ToListAsync();
 
             var activePromotionIds = activePromotions.Select(ap => ap.Id).ToHashSet();
 
-            // 3. Termékek csoportosítása akciók szerint
-            var query = from oi in filteredOrderItems
-                        join p in _productRepository.Table on oi.orderItem.ProductId equals p.Id
-                        where activePromotionIds.Contains(p.AkcioId)
-                        group new { oi.orderItem, p, oi.CreatedOnUtc } by new { p.AkcioId, p.AkcioName } into g
-                        select new PromotionSummaryReportModel
-                        {
-                            Name = g.Key.AkcioName ?? "Unknown",
-                            MonthlyUsageCount = g.Sum(x => x.orderItem.Quantity),
-                            MonthlyTotalDiscountAmount = (int)Math.Round(g.Sum(x => x.orderItem.PriceInclTax)),
-                            DailyUsageCount = 0, // Később töltjük ki
-                            DailyTotalDiscountAmount = 0, // Később töltjük ki
-                            DailyPercentage = 0, // Később töltjük ki
-                            MonthlyPercentage = 0, // Később töltjük ki
-                            MarginAmount = 0, // Később töltjük ki
-                            MarginPercentage = 0 // Később töltjük ki
-                        };
+            List<PromotionSummaryReportModel> result = new List<PromotionSummaryReportModel>();
 
-            var result = await query.ToListAsync();
+            switch (searchModel.FilterCategoryId)
+            {
+                case 0: // AKCIÓNKÉNT
+                    var queryOnPromotions = from oi in filteredOrderItems
+                                join p in _productRepository.Table on oi.orderItem.ProductId equals p.Id
+                                where activePromotionIds.Contains(p.AkcioId)
+                                group new { oi.orderItem, p, oi.CreatedOnUtc } by new { p.AkcioId, p.AkcioName } into g
+                                select new PromotionSummaryReportModel
+                                {
+                                    Name = g.Key.AkcioName ?? "Unknown",
+                                    MonthlyUsageCount = g.Sum(x => x.orderItem.Quantity),
+                                    MonthlyTotalDiscountAmount = (int)Math.Round(g.Sum(x => x.orderItem.PriceInclTax)),
+                                    DailyUsageCount = 0, // Később töltjük ki
+                                    DailyTotalDiscountAmount = 0, // Később töltjük ki
+                                    DailyPercentage = 0, // Később töltjük ki
+                                    MonthlyPercentage = 0, // Később töltjük ki
+                                    MarginAmount = 0, // Később töltjük ki
+                                    MarginPercentage = 0 // Később töltjük ki
+                                };
 
+                    result = await queryOnPromotions.ToListAsync();
+                    return result;
 
-            return result;
+                case 1: // MÁRKÁNKÉMT
+                    var queryOnBrands = from oi in filteredOrderItems
+                                join product in _productRepository.Table on oi.orderItem.ProductId equals product.Id
+                                join mapping in _productManufacturerMappingRepository.Table on product.Id equals mapping.ProductId
+                                join manufacturer in _manufacturerRepository.Table on mapping.ManufacturerId equals manufacturer.Id
+                                where activePromotionIds.Contains(product.AkcioId)
+                                group new { oi.orderItem, product, manufacturer } by new { manufacturer.Id, manufacturer.Name } into g
+                                select new PromotionSummaryReportModel
+                                {
+                                    Name = g.Key.Name ?? "Unknown",
+                                    MonthlyUsageCount = g.Sum(x => x.orderItem.Quantity),
+                                    MonthlyTotalDiscountAmount = (int)Math.Round(g.Sum(x => x.orderItem.PriceInclTax)),
+                                    DailyUsageCount = 0, // Később töltjük ki
+                                    DailyTotalDiscountAmount = 0, // Később töltjük ki
+                                    DailyPercentage = 0, // Később töltjük ki
+                                    MonthlyPercentage = 0, // Később töltjük ki
+                                    MarginAmount = 0, // Később töltjük ki
+                                    MarginPercentage = 0 // Később töltjük ki
+                                };
+
+                    result = await queryOnBrands.ToListAsync();
+                    return result;
+
+                case 2: // KATEGÓRIÁNKÉNT
+                    var queryOnCategories = from oi in filteredOrderItems
+                                join p in _productRepository.Table on oi.orderItem.ProductId equals p.Id
+                                where activePromotionIds.Contains(p.AkcioId)
+                                group new { oi.orderItem, p, oi.CreatedOnUtc } by new { p.AkcioId, p.AkcioName } into g
+                                select new PromotionSummaryReportModel
+                                {
+                                    Name = g.Key.AkcioName ?? "Unknown",
+                                    MonthlyUsageCount = g.Sum(x => x.orderItem.Quantity),
+                                    MonthlyTotalDiscountAmount = (int)Math.Round(g.Sum(x => x.orderItem.PriceInclTax)),
+                                    DailyUsageCount = 0, // Később töltjük ki
+                                    DailyTotalDiscountAmount = 0, // Később töltjük ki
+                                    DailyPercentage = 0, // Később töltjük ki
+                                    MonthlyPercentage = 0, // Később töltjük ki
+                                    MarginAmount = 0, // Később töltjük ki
+                                    MarginPercentage = 0 // Később töltjük ki
+                                };
+
+                    result = await queryOnCategories.ToListAsync();
+                    return result;
+
+                default:
+                    await _logger.ErrorAsync($"GetPromotionSummaryReportModelListAsync függvényben a search model FilterCategoryId adattagja rosszul definiált értékkel rendelkezik: {searchModel.FilterCategoryId}");
+                    return result;
+            }
         }
         #endregion
 
@@ -522,19 +586,22 @@ namespace Nop.Plugin.Reports.CustomReports.Services
         {
 
             var referenceDate = searchModel.Date ?? DateTime.UtcNow;
-            //var referenceDate = new DateTime(2023, 3, 3).Date;
             var oneMonthAgo = referenceDate.AddDays(-30).Date;
 
             var query = from o in _orderRepository.Table
                         join c in _customerRepository.Table on o.CustomerId equals c.Id
                         join s in _shipmentRepository.Table on o.Id equals s.OrderId
-                        where o.CreatedOnUtc >= oneMonthAgo && o.CreatedOnUtc < referenceDate
-                                && !o.TesztRendeles
+                        join a in _addressRepository.Table on o.BillingAddressId equals a.Id
+                        join oNote in _orderNoteRepository.Table on o.Id equals oNote.OrderId
+                        where oNote.Note.Contains("SimplePay tranzakció azonosító")
+                              && oNote.Note.Contains("Fizetési státusz / Payment Status: Paid")
+                              && o.CreatedOnUtc >= oneMonthAgo && o.CreatedOnUtc < referenceDate
+                              && !o.TesztRendeles && !o.Deleted
                         select new CustomerIdReportModel
                         {
                             OrderNumber = o.CustomOrderNumber,
-                            CustomerId = c.CustomerGuid.ToString(), //TODO: Ennek másnak kell lennnie (amit küld a BCnek cím Id)
-                            SimplePayTransactionId = "N/A",
+                            CustomerId = a.SzuloAddressId.ToString(),
+                            SimplePayTransactionId = ExtractTransactionId(oNote.Note),
                             PaymentMethod = o.PaymentMethodSystemName,
                             Carrier = o.ShippingMethod,
                             TrackingNumber = s.TrackingNumber
@@ -542,6 +609,35 @@ namespace Nop.Plugin.Reports.CustomReports.Services
 
             return await query.ToListAsync();
         }
+
+        /// <summary>
+        /// Segítő metódus a noteokban szereplő tranzakció ID kivágásához
+        /// </summary>
+        /// <param name="note">Note ami tartalmazza a tranzakció ID-t</param>
+        /// <returns>A kivágott tranzakció ID</returns>
+        private static string ExtractTransactionId(string note)
+        {
+            try
+            {
+                var startMarker = "SimplePay tranzakció azonosító / Transaction Id: ";
+                var endMarker = "\n"; // Feltételezzük, hogy a sorvége egy új sor karakter.
+                var startIndex = note.IndexOf(startMarker, StringComparison.Ordinal) + startMarker.Length;
+
+                if (startIndex < startMarker.Length)
+                    return "N/A"; // Ha a kezdő index nem található.
+
+                var endIndex = note.IndexOf(endMarker, startIndex, StringComparison.Ordinal);
+                if (endIndex == -1)
+                    endIndex = note.Length; // Ha nincs új sor karakter, akkor a string végéig megyünk.
+
+                return note.Substring(startIndex, endIndex - startIndex).Trim();
+            }
+            catch
+            {
+                return "N/A"; // Hibakezelés.
+            }
+        }
+
 
         #endregion
 

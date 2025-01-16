@@ -64,7 +64,7 @@ namespace Nop.Plugin.Reports.CustomReports.Factories.CustomerReports
 
         #region PromotionSummary
 
-        Task<List<PromotionSummaryReportModel>> FetchPromotionSummaryDataAsync(EmptySearchModel searchModel);
+        Task<List<PromotionSummaryReportModel>> FetchPromotionSummaryDataAsync(PromotionSummarySearchModel searchModel);
 
         #endregion
 

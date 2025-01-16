@@ -448,7 +448,7 @@ namespace Nop.Plugin.Reports.CustomReports.Factories.CustomerReports
 
         #endregion
         #region PromotionSummary
-        public async Task<List<PromotionSummaryReportModel>> FetchPromotionSummaryDataAsync(EmptySearchModel searchModel)
+        public async Task<List<PromotionSummaryReportModel>> FetchPromotionSummaryDataAsync(PromotionSummarySearchModel searchModel)
         {
             if (searchModel == null)
                 throw new ArgumentNullException(nameof(searchModel));

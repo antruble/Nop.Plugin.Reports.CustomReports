@@ -152,6 +152,11 @@ namespace Nop.Plugin.Reports.CustomReports.Factories
                 var result = await BuildOrderSummarySearchModelAsync(new OrderSummarySearchModel());
                 return result as TSearchModel;
             }
+            else if (typeof(TSearchModel) == typeof(PromotionSummarySearchModel))
+            {
+                var result = await BuildPromotionSummarySearchModelAsync(new PromotionSummarySearchModel());
+                return result as TSearchModel;
+            }
             else if (typeof(TSearchModel) == typeof(SingleDateSearchModel))
             {
                 return new SingleDateSearchModel() as TSearchModel;
@@ -253,7 +258,7 @@ namespace Nop.Plugin.Reports.CustomReports.Factories
 
                 #region PromotionSummary
 
-                case Type reportType when reportType == typeof(PromotionSummaryReportModel) && searchModel is EmptySearchModel promotionSummarySearchModel:
+                case Type reportType when reportType == typeof(PromotionSummaryReportModel) && searchModel is PromotionSummarySearchModel promotionSummarySearchModel:
                     var promotionSummaryResult = await _customerReportsModelFactory.FetchPromotionSummaryDataAsync(promotionSummarySearchModel);
                     return promotionSummaryResult.Cast<TReportModel>().ToList();
 
@@ -421,10 +426,35 @@ namespace Nop.Plugin.Reports.CustomReports.Factories
             return searchModel;
         }
 
+        private async Task<PromotionSummarySearchModel> BuildPromotionSummarySearchModelAsync(PromotionSummarySearchModel searchModel)
+        {
+            if (searchModel == null)
+                throw new ArgumentNullException(nameof(searchModel));
+
+            //prepare "published" filter (0 - all; 1 - published only; 2 - unpublished only)
+            searchModel.AvailableCategoryOptions.Add(new SelectListItem
+            {
+                Value = "0",
+                Text = await _localizationService.GetResourceAsync("Admin.Reports.PromotionSummary.Search.OnPromotions")
+            });
+            searchModel.AvailableCategoryOptions.Add(new SelectListItem
+            {
+                Value = "1",
+                Text = await _localizationService.GetResourceAsync("Admin.Reports.PromotionSummary.Search.OnBrands")
+            });
+            searchModel.AvailableCategoryOptions.Add(new SelectListItem
+            {
+                Value = "2",
+                Text = await _localizationService.GetResourceAsync("Admin.Reports.PromotionSummary.Search.OnCategories")
+            });
+
+
+            return searchModel;
+        }
         #endregion
 
         #region Utilities
-        
+
         /// <summary>
         /// Prepare default item
         /// </summary>

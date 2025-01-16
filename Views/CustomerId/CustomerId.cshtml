@@ -21,6 +21,9 @@
     </h1>
     <div class="float-right d-flex flex-row-reverse justify-content-center align-items-center">
         <form asp-controller="Report" asp-action="ExportExcel" method="post">
+
+            <input type="hidden" id="exportDate" name="Date" value="@Model.Date" />
+
             <button asp-action="ExportExcel" type="submit" name="exportexcel-all">
                 <i class="far fa-file-excel"></i>
                 @T("Admin.Common.ExportToExcel.All")
@@ -179,92 +182,97 @@
     </div>
 </section>
 <script>
-
-$(document).ready(function () {
-    const taskId = 1; // Állítsd be a megfelelõ TaskId-t
-    const emailList = $('#emailList');
-    const emailInput = $('#emailInput');
-
-    // Email hozzáadása
-    $('#addEmailBtn').on('click', function () {
-        const email = emailInput.val().trim();
-
-        if (!email) {
-            alert('@T("Admin.Reports.EmailEmptyError")');
-            return;
-        }
-
-        const postData = {
-            taskId: taskId,
-            email: email
-        }
-        addAntiForgeryToken(postData);
-
-        $.ajax({
-            url: '@Url.Action("AddEmailToTask", "CustomerId")',
-            method: 'POST',
-            data: postData,
-            success: function (response) {
-                loadEmailList();
-                emailInput.val('');
-            },
-            error: function (xhr) {
-                alert(xhr.responseText || '@T("Admin.Reports.EmailAddError")');
-            }
+    $(document).ready(function () {
+        // Az excel export dátum filterének szinkronizálása a riport dátum filterével
+        $('#Date').on('change', function () {
+            const selectedDate = $(this).val(); // Az új dátum értéke
+            $('#exportDate').val(selectedDate); // Hidden input frissítése
         });
+
+        // EMAIL KÜLDÉS TASK BEÁLLÍTÁSAI
+        const taskId = 1; // Állítsd be a megfelelõ TaskId-t
+        const emailList = $('#emailList');
+        const emailInput = $('#emailInput');
+
+        // Email hozzáadása
+        $('#addEmailBtn').on('click', function () {
+            const email = emailInput.val().trim();
+
+            if (!email) {
+                alert('@T("Admin.Reports.EmailEmptyError")');
+                return;
+            }
+
+            const postData = {
+                taskId: taskId,
+                email: email
+            }
+            addAntiForgeryToken(postData);
+
+            $.ajax({
+                url: '@Url.Action("AddEmailToTask", "CustomerId")',
+                method: 'POST',
+                data: postData,
+                success: function (response) {
+                    loadEmailList();
+                    emailInput.val('');
+                },
+                error: function (xhr) {
+                    alert(xhr.responseText || '@T("Admin.Reports.EmailAddError")');
+                }
+            });
+        });
+
+        // Email törlése
+        emailList.on('click', '.remove-email-btn', function () {
+            const email = $(this).data('email');
+
+            const postData = {
+                taskId: taskId,
+                email: email
+            }
+
+            addAntiForgeryToken(postData);
+
+            $.ajax({
+                url: '@Url.Action("RemoveEmailFromTask", "CustomerId")',
+                method: 'POST',
+                data: postData,
+                success: function (response) {
+                    loadEmailList();
+                },
+                error: function (xhr) {
+                    alert(xhr.responseText || '@T("Admin.Reports.EmailRemoveError")');
+                }
+            });
+        });
+
+        // Email lista betöltése
+        function loadEmailList() {
+            $.ajax({
+                url: '@Url.Action("GetEmailsByTaskId", "CustomerId")',
+                method: 'GET',
+                data: { taskId },
+                success: function (data) {
+                    emailList.empty();
+                    data.forEach(email => {
+                        emailList.append(`
+                            <li class="list-group-item d-flex justify-content-between align-items-center">
+                                ${email.Email}
+                                <button class="btn btn-outline-danger btn-sm remove-email-btn" data-email="${email.Email}">
+                                    <i class="fa fa-trash" style="padding:0;"></i>
+                                </button>
+                            </li>
+                        `);
+                    });
+                },
+                error: function () {
+                    alert('@T("Admin.Reports.EmailLoadError")');
+                }
+            });
+        }
+
+        // Email lista inicializálása
+        loadEmailList();
     });
-
-    // Email törlése
-    emailList.on('click', '.remove-email-btn', function () {
-        const email = $(this).data('email');
-
-        const postData = {
-            taskId: taskId,
-            email: email
-        }
-
-        addAntiForgeryToken(postData);
-
-        $.ajax({
-            url: '@Url.Action("RemoveEmailFromTask", "CustomerId")',
-            method: 'POST',
-            data: postData,
-            success: function (response) {
-                loadEmailList();
-            },
-            error: function (xhr) {
-                alert(xhr.responseText || '@T("Admin.Reports.EmailRemoveError")');
-            }
-        });
-    });
-
-    // Email lista betöltése
-    function loadEmailList() {
-        $.ajax({
-            url: '@Url.Action("GetEmailsByTaskId", "CustomerId")',
-            method: 'GET',
-            data: { taskId },
-            success: function (data) {
-                emailList.empty();
-                data.forEach(email => {
-                    emailList.append(`
-                        <li class="list-group-item d-flex justify-content-between align-items-center">
-                            ${email.Email}
-                            <button class="btn btn-outline-danger btn-sm remove-email-btn" data-email="${email.Email}">
-                                <i class="fa fa-trash" style="padding:0;"></i>
-                            </button>
-                        </li>
-                    `);
-                });
-            },
-            error: function () {
-                alert('@T("Admin.Reports.EmailLoadError")');
-            }
-        });
-    }
-
-    // Email lista inicializálása
-    loadEmailList();
-});
-
 </script>

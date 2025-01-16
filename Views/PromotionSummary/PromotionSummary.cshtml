@@ -1,5 +1,5 @@
 @using Nop.Plugin.Reports.CustomReports.Models.PromotionSummary
-@model EmptySearchModel
+@model PromotionSummarySearchModel
 @{
     //page title
     Layout = "_AdminLayout";
@@ -41,6 +41,18 @@
 
                         <div class="search-body @(hideSearchBlock ? "closed" : "")">
                             <div class="row">
+                                <div class="col-md-6">
+                                    <div class="form-group row">
+                                        <div class="col-md-4">
+                                            <nop-label asp-for="FilterCategoryId" />
+                                        </div>
+                                        <div class="col-md-8">
+                                            <nop-select asp-for="FilterCategoryId" asp-items="Model.AvailableCategoryOptions" />
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="row">
                                 <div class="text-center col-12">
                                     <button type="button" id="search-PromotionSummaryreport" class="btn btn-primary btn-search">
                                         <i class="fas fa-chart-line"></i>
@@ -63,6 +75,10 @@
                             SearchButtonId = "search-PromotionSummaryreport",
                             Length = Model.PageSize,
                             LengthMenu = Model.AvailablePageSizes,
+                            Filters = new List<FilterParameter>
+                            {
+                                new FilterParameter(nameof(Model.FilterCategoryId))
+                            },
                             ColumnCollection = new List<ColumnProperty>
                             {
                                 new ColumnProperty(nameof(PromotionSummaryReportModel.Name))

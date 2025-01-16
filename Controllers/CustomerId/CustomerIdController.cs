@@ -28,12 +28,18 @@ namespace Nop.Plugin.Reports.CustomReports.Controllers.CustomerId
 {
     public class CustomerIdController : BaseReportController<SingleDateSearchModel, CustomerIdListModel, CustomerIdReportModel>
     {
+        #region Fields
+
         private readonly ExportReportService _exportReportService;
         private readonly INotificationService _notificationService;
         private readonly IQueuedEmailService _queuedEmailService;
         private readonly IEmailAccountService _emailAccountService;
         private readonly IScheduleTaskService _scheduleTaskService;
         private readonly ITaskEmailMappingService _taskEmailMappingService;
+
+        #endregion
+
+        #region Ctor
 
         public CustomerIdController(
             BaseReportFactory baseReportFactory,
@@ -58,11 +64,15 @@ namespace Nop.Plugin.Reports.CustomReports.Controllers.CustomerId
             _taskEmailMappingService = taskEmailMappingService;
         }
 
+        #endregion
+
+        #region Methods
+
         public override async Task<IActionResult> ShowReport()
         {
             // Ellenőrizzük, hogy létezik-e a ScheduledTask
             var existingTask = (await _scheduleTaskService.GetAllTasksAsync())
-                .FirstOrDefault(t => t.Type == "Nop.Plugin.Reports.CustomReports.Tasks.SendEmailTask, Nop.Plugin.Reports.CustomReports");
+                .FirstOrDefault(t => t.Type == "Nop.Plugin.Reports.CustomReports.Tasks.RegisterEmailTask, Nop.Plugin.Reports.CustomReports");
 
             ViewBag.TaskExists = existingTask != null;
 
@@ -91,17 +101,26 @@ namespace Nop.Plugin.Reports.CustomReports.Controllers.CustomerId
             }
         }
 
+
+        /// <summary>
+        /// Hozzáad egy ütemezett feladatot a megadott keresési modell alapján.
+        /// </summary>
+        /// <param name="searchModel">A keresési modell, amely tartalmazza a lekérdezés dátumát.</param>
         [HttpPost, ActionName("AddScheduledTask")]
         [FormValueRequired("add-task")]
         public async Task<IActionResult> AddScheduledTask(SingleDateSearchModel searchModel)
         {
-            await AddSendEmailTaskAsync();
+            await SetupEmailCreationTaskAsync();
 
-            return RedirectToAction("ShowReport"); // vagy az adott nézet neve
+            return RedirectToAction("ShowReport");
         }
 
 
-
+        /// <summary>
+        /// Visszaadja az adott feladathoz tartozó összes email címet.
+        /// </summary>
+        /// <param name="taskId">A feladat azonosítója, amelyhez tartozó emaileket le kell kérni.</param>
+        /// <returns>Az email címek listája JSON formátumban.</returns>
         [HttpGet]
         public async Task<IActionResult> GetEmailsByTaskId(int taskId)
         {
@@ -109,6 +128,12 @@ namespace Nop.Plugin.Reports.CustomReports.Controllers.CustomerId
             return Json(emails);
         }
 
+        /// <summary>
+        /// Hozzárendeli az adott email címet az adott feladathoz.
+        /// </summary>
+        /// <param name="taskId">A feladat azonosítója.</param>
+        /// <param name="email">Az email cím, amelyet hozzá kell rendelni.</param>
+        /// <returns>HTTP válasz a művelet eredményével.</returns>
         [HttpPost]
         public async Task<IActionResult> AddEmailToTask(int taskId, string email)
         {
@@ -136,6 +161,12 @@ namespace Nop.Plugin.Reports.CustomReports.Controllers.CustomerId
             }
         }
 
+        /// <summary>
+        /// Eltávolítja a megadott emailt a feladathoz hozzárendelt emailek listájából.
+        /// </summary>
+        /// <param name="taskId">A feladat azonosítója, amelyből az email cím eltávolításra kerül.</param>
+        /// <param name="email">Az eltávolítandó email cím.</param>
+        /// <returns>HTTP válasz a művelet eredményével.</returns>
         [HttpPost]
         public async Task<IActionResult> RemoveEmailFromTask(int taskId, string email)
         {
@@ -154,35 +185,40 @@ namespace Nop.Plugin.Reports.CustomReports.Controllers.CustomerId
             }
         }
 
-        public async Task AddSendEmailTaskAsync()
+        /// <summary>
+        /// Regisztrálja a riporthoz tartozó "email létrehozási" taskot, ha az még nem létezik.
+        /// </summary>
+        private async Task SetupEmailCreationTaskAsync()
         {
             // Ellenőrizd, hogy létezik-e már a feladat
             var existingTask = (await _scheduleTaskService.GetAllTasksAsync())
-                .FirstOrDefault(t => t.Type == "Nop.Plugin.Reports.CustomReports.Tasks.SendEmailTask, Nop.Plugin.Reports.CustomReports");
+                .FirstOrDefault(t => t.Type == "Nop.Plugin.Reports.CustomReports.Tasks.RegisterEmailTask, Nop.Plugin.Reports.CustomReports");
 
             if (existingTask != null)
             {
                 // Ha már létezik, nem kell újra létrehozni
-                await Logger.InformationAsync("The 'Send Email Task' is already registered.");
+                await Logger.InformationAsync("The 'Register Email Task' is already registered.");
                 return;
             }
 
-            // Ha nem létezik, hozz létre egy új feladatot
+            // Ha nem létezik még, akkor létrehozzuk
             var lastEnabledUtc = DateTime.UtcNow;
 
             await _scheduleTaskService.InsertTaskAsync(new ScheduleTask
             {
-                Name = "Send Email Task",
-                Seconds = 60, // Futtatási időköz másodpercben
-                Type = "Nop.Plugin.Reports.CustomReports.Tasks.SendEmailTask, Nop.Plugin.Reports.CustomReports",
+                Name = "Reports plugin: Kiküldendő emailek regisztrálása",
+                Seconds = 86400,
+                Type = "Nop.Plugin.Reports.CustomReports.Tasks.RegisterEmailTask, Nop.Plugin.Reports.CustomReports",
                 Enabled = true,
                 LastEnabledUtc = lastEnabledUtc,
+                LastSuccessUtc = DateTime.UtcNow.Date.AddHours(8),
                 StopOnError = false
             });
 
-            await Logger.InformationAsync("The 'Send Email Task' has been successfully added.");
+            await Logger.InformationAsync("The 'Register Email Task' has been successfully added.");
         }
-
+        
+        #endregion
     }
 
     public class EmailValidator : AbstractValidator<string>

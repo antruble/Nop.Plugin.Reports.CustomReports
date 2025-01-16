@@ -186,22 +186,22 @@ namespace Nop.Plugin.Reports.CustomReports
                 {
                     IsGroup = true,
                     SystemName = "Reports.CustomerReports",
-                    Title = "Ügyfélszolgálati riportok",
+                    Title = await _localizationService.GetResourceAsync("Admin.Reports.CustomerServiceReports.Title"),
                     IconClass = "far fa-dot-circle",
                     ChildReports = new[]
                     {
-                        new { SystemName = "Reports.CustomerReports.DailyOrders", Title = "DailyOrders", ControllerName = "DailyOrders", IconClass = "far fa-dot-circle" },
-                        new { SystemName = "Reports.CustomerReports.Discounts", Title = "Discounts", ControllerName = "Discounts", IconClass = "far fa-dot-circle" },
-                        new { SystemName = "Reports.CustomerReports.RegisteredCustomers", Title = "RegisteredCustomers", ControllerName = "RegisteredCustomers", IconClass = "far fa-dot-circle" },
-                        new { SystemName = "Reports.CustomerReports.ShoperiaPlusSubscriptions", Title = "ShoperiaPlusSubscriptions", ControllerName = "ShoperiaPlusSubscriptions", IconClass = "far fa-dot-circle" },
-                        new { SystemName = "Reports.CustomerReports.ReturnedOrders", Title = "ReturnedOrders", ControllerName = "ReturnedOrders", IconClass = "far fa-dot-circle" }
+                        new { SystemName = "Reports.CustomerReports.DailyOrders", Title = await _localizationService.GetResourceAsync("Admin.Reports.CustomerServiceReports.DailyOrders.Title"), ControllerName = "DailyOrders", IconClass = "far fa-dot-circle" },
+                        new { SystemName = "Reports.CustomerReports.Discounts", Title = await _localizationService.GetResourceAsync("Admin.Reports.CustomerServiceReports.Discounts.Title"), ControllerName = "Discounts", IconClass = "far fa-dot-circle" },
+                        new { SystemName = "Reports.CustomerReports.RegisteredCustomers", Title = await _localizationService.GetResourceAsync("Admin.Reports.CustomerServiceReports.RegisteredCustomers.Title"), ControllerName = "RegisteredCustomers", IconClass = "far fa-dot-circle" },
+                        new { SystemName = "Reports.CustomerReports.ShoperiaPlusSubscriptions", Title = await _localizationService.GetResourceAsync("Admin.Reports.CustomerServiceReports.ShoperiaPlusSubscriptions.Title"), ControllerName = "ShoperiaPlusSubscriptions", IconClass = "far fa-dot-circle" },
+                        new { SystemName = "Reports.CustomerReports.ReturnedOrders", Title = await _localizationService.GetResourceAsync("Admin.Reports.CustomerServiceReports.ReturnedOrders.Title"), ControllerName = "ReturnedOrders", IconClass = "far fa-dot-circle" }
                     }
                 },
                 new
                 {
                     IsGroup = false,
                     SystemName = "Reports.OrderDetails",
-                    Title = "Order details",
+                    Title = await _localizationService.GetResourceAsync("Admin.Reports.OrderDetails.Title"),
                     IconClass = "far fa-dot-circle",
                     ControllerName = "OrderDetails"
                 },
@@ -213,14 +213,14 @@ namespace Nop.Plugin.Reports.CustomReports
                     IconClass = "far fa-dot-circle",
                     ControllerName = "OrderSummary"
                 },
-                new
-                {
-                    IsGroup = false,
-                    SystemName = "Reports.PromotionSummary",
-                    Title = await _localizationService.GetResourceAsync("Admin.Reports.PromotionSummary.Title"),
-                    IconClass = "far fa-dot-circle",
-                    ControllerName = "PromotionSummary"
-                },
+                //new
+                //{
+                //    IsGroup = false,
+                //    SystemName = "Reports.PromotionSummary",
+                //    Title = await _localizationService.GetResourceAsync("Admin.Reports.PromotionSummary.Title"),
+                //    IconClass = "far fa-dot-circle",
+                //    ControllerName = "PromotionSummary"
+                //},
                 new
                 {
                     IsGroup = false,
@@ -233,13 +233,13 @@ namespace Nop.Plugin.Reports.CustomReports
                 {
                     IsGroup = true,
                     SystemName = "Reports.Problemasak",
-                    Title = "Problémás riportok",
+                    Title = await _localizationService.GetResourceAsync("Admin.Reports.Problemasak.Title"),
                     IconClass = "far fa-dot-circle",
                     ChildReports = new[]
                     {
-                        new { SystemName = "Reports.Problemasak.ProblemasManufacturer", Title = "Problémás márkák", ControllerName = "ProblemasManufacturer", IconClass = "far fa-dot-circle" },
-                        new { SystemName = "Reports.Problemasak.ProblemasOrder", Title = "Problémás rendelések", ControllerName = "ProblemasOrder", IconClass = "far fa-dot-circle" },
-                        new { SystemName = "Reports.Problemasak.ProblemasProduct", Title = "Problémás termékek", ControllerName = "ProblemasProduct", IconClass = "far fa-dot-circle" },
+                        new { SystemName = "Reports.Problemasak.ProblemasManufacturer", Title = await _localizationService.GetResourceAsync("Admin.Reports.Problemasak.Markak.Title"), ControllerName = "ProblemasManufacturer", IconClass = "far fa-dot-circle" },
+                        new { SystemName = "Reports.Problemasak.ProblemasOrder", Title = await _localizationService.GetResourceAsync("Admin.Reports.Problemasak.Rendelesek.Title"), ControllerName = "ProblemasOrder", IconClass = "far fa-dot-circle" },
+                        new { SystemName = "Reports.Problemasak.ProblemasProduct", Title = await _localizationService.GetResourceAsync("Admin.Reports.Problemasak.Termekek.Title"), ControllerName = "ProblemasProduct", IconClass = "far fa-dot-circle" },
                     }
                 },
 

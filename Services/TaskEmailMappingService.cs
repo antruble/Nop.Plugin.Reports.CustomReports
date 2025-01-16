@@ -9,10 +9,30 @@ using System.Threading.Tasks;
 
 namespace Nop.Plugin.Reports.CustomReports.Services
 {
+    /// <summary>
+    /// Service a riportokhoz tartozó scheduled task email adataihoz.
+    /// </summary>
     public interface ITaskEmailMappingService
     {
+        /// <summary>
+        /// Email címek lekérdezése egy adott feladat azonosító alapján.
+        /// </summary>
+        /// <param name="taskId">Feladat azonosító.</param>
+        /// <returns>A társított email címek listája.</returns>
         Task<IList<TaskEmailMappingRecord>> GetEmailsByTaskIdAsync(int taskId);
+
+        /// <summary>
+        /// Email cím hozzáadása egy feladathoz.
+        /// </summary>
+        /// <param name="taskId">Feladat azonosító.</param>
+        /// <param name="email">Email cím.</param>
         Task AddEmailToTaskAsync(int taskId, string email);
+
+        /// <summary>
+        /// Email cím eltávolítása egy feladathoz társított címek közül.
+        /// </summary>
+        /// <param name="taskId">Feladat azonosító.</param>
+        /// <param name="email">Email cím.</param>
         Task RemoveEmailFromTaskAsync(int taskId, string email);
     }
 
