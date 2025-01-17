@@ -138,7 +138,7 @@ namespace Nop.Plugin.Reports.CustomReports.Controllers.CustomerId
         public async Task<IActionResult> AddEmailToTask(int taskId, string email)
         {
             if (string.IsNullOrWhiteSpace(email))
-                return BadRequest("Email cannot be empty.");
+                return BadRequest("Email cím nem lehet üres!");
 
             var validator = new EmailValidator();
             var validationResult = validator.Validate(email);
@@ -152,12 +152,12 @@ namespace Nop.Plugin.Reports.CustomReports.Controllers.CustomerId
             try
             {
                 await _taskEmailMappingService.AddEmailToTaskAsync(taskId, email);
-                return Ok(new { message = "Email added successfully." });
+                return Ok(new { message = "Email cím sikeresen hozzáadva!" });
             }
             catch (Exception ex)
             {
-                await Logger.ErrorAsync($"Error adding email: {ex.Message}");
-                return StatusCode(500, "An error occurred while adding the email.");
+                await Logger.ErrorAsync($"Hiba az email hozzáadása közben: {ex.Message}");
+                return StatusCode(500, "Hiba történt az email hozzáadása közben.");
             }
         }
 
@@ -171,17 +171,17 @@ namespace Nop.Plugin.Reports.CustomReports.Controllers.CustomerId
         public async Task<IActionResult> RemoveEmailFromTask(int taskId, string email)
         {
             if (string.IsNullOrWhiteSpace(email))
-                return BadRequest("Email cannot be empty.");
+                return BadRequest("Email nem lehet üres!");
 
             try
             {
                 await _taskEmailMappingService.RemoveEmailFromTaskAsync(taskId, email);
-                return Ok(new { message = "Email removed successfully." });
+                return Ok(new { message = "Email sikeresen törölve!" });
             }
             catch (Exception ex)
             {
-                await Logger.ErrorAsync($"Error removing email: {ex.Message}");
-                return StatusCode(500, "An error occurred while removing the email.");
+                await Logger.ErrorAsync($"Hiba az email törlése közben: {ex.Message}");
+                return StatusCode(500, "Hiba történt az email törlése közben.");
             }
         }
 
@@ -221,13 +221,16 @@ namespace Nop.Plugin.Reports.CustomReports.Controllers.CustomerId
         #endregion
     }
 
+    /// <summary>
+    /// Egy e-mail cím validálására szolgáló segéd osztály a FluentValidation segítségével.
+    /// </summary>
     public class EmailValidator : AbstractValidator<string>
     {
         public EmailValidator()
         {
             RuleFor(email => email)
-                .NotEmpty().WithMessage("Email nem lehet üres.")
-                .EmailAddress().WithMessage("Helytelen email formátum.");
+                .NotEmpty().WithMessage("Email nem lehet üres.") // Ha üres az email cím, akkor hibaüzenet
+                .EmailAddress().WithMessage("Helytelen email formátum."); // Ha helytelen email formátum, akkor hibaüzenet
         }
     }
 }
