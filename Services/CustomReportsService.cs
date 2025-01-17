@@ -123,7 +123,8 @@ namespace Nop.Plugin.Reports.CustomReports.Services
         {
             // Lekérdezés
             var query = from o in _orderRepository.Table
-                        where o.CustomerId == customerId && o.OrderGuid != orderGuid
+                        where !o.Deleted && !o.TesztRendeles 
+                              && o.CustomerId == customerId && o.OrderGuid != orderGuid
                         select o;
 
             // Van-e volt rendelése, vagy nem
@@ -145,8 +146,9 @@ namespace Nop.Plugin.Reports.CustomReports.Services
                         join o in _orderRepository.Table on duh.OrderId equals o.Id
                         join d in _discountRepository.Table on duh.DiscountId equals d.Id
                         join oi in _orderItemRepository.Table on duh.OrderId equals oi.OrderId
-                        where (!createdFromUtc.HasValue || duh.CreatedOnUtc >= createdFromUtc.Value) &&
-                              (!createdToUtc.HasValue || duh.CreatedOnUtc <= createdToUtc.Value)
+                        where !o.Deleted && !o.TesztRendeles
+                              && (!createdFromUtc.HasValue || duh.CreatedOnUtc >= createdFromUtc.Value)
+                              && (!createdToUtc.HasValue || duh.CreatedOnUtc <= createdToUtc.Value)
                         group new { duh, o, d, oi } by d.DiscountTypeId into g
                         select new DiscountReportModel
                         {
@@ -217,7 +219,8 @@ namespace Nop.Plugin.Reports.CustomReports.Services
         {
             var query = from order in _orderRepository.Table
                         join shipment in _shipmentRepository.Table on order.Id equals shipment.OrderId
-                        where order.OrderStatusId == 40 // Cancelled
+                        where !order.TesztRendeles && !order.Deleted
+                              && order.OrderStatusId == 40 // Cancelled
                               && shipment.DeliveryDateUtc != null // Csak a szállítással rendelkező rendelések
                               && (!createdFromUtc.HasValue || shipment.DeliveryDateUtc >= createdFromUtc.Value)
                               && (!createdToUtc.HasValue || shipment.DeliveryDateUtc <= createdToUtc.Value)
@@ -292,9 +295,9 @@ namespace Nop.Plugin.Reports.CustomReports.Services
                         join shipment in _shipmentRepository.Table on order.Id equals shipment.OrderId into shipmentGroup
                         from shipment in shipmentGroup.DefaultIfEmpty()
                         join note in _orderNoteRepository.Table on order.Id equals note.OrderId
-                        where note.Note.Contains("Order status has been changed to Feldolgozás alatt") &&
-                              (!searchModel.StartDate.HasValue || note.CreatedOnUtc >= searchModel.StartDate.Value) &&
-                              (!searchModel.EndDate.HasValue || note.CreatedOnUtc <= searchModel.EndDate.Value)
+                        where note.Note.Contains("Order status has been changed to Feldolgozás alatt")
+                              && (!searchModel.StartDate.HasValue || note.CreatedOnUtc >= searchModel.StartDate.Value)
+                              && (!searchModel.EndDate.HasValue || note.CreatedOnUtc <= searchModel.EndDate.Value)
                         select new OrderDetailsReportModel
                         {
                             OrderId = order.Id,
@@ -473,7 +476,7 @@ namespace Nop.Plugin.Reports.CustomReports.Services
 
                 return data;
             }
-        }
+        } //TODO: megpróbálni optimalizálni
         #endregion
 
         #region PromotionSummary
@@ -498,7 +501,8 @@ namespace Nop.Plugin.Reports.CustomReports.Services
             // 2. OrderItems szűrése az akciókhoz
             var filteredOrderItems = await (from orderItem in _orderItemRepository.Table
                                             join order in _orderRepository.Table on orderItem.OrderId equals order.Id
-                                            where order.CreatedOnUtc >= oldestPromotionStartDate && orderItem.AkcioVolt
+                                            where !order.Deleted && !order.TesztRendeles 
+                                                  && order.CreatedOnUtc >= oldestPromotionStartDate && orderItem.AkcioVolt
                                             select new { orderItem, order.CreatedOnUtc })
                                    .ToListAsync();
 
@@ -584,24 +588,27 @@ namespace Nop.Plugin.Reports.CustomReports.Services
 
         public async Task<IList<CustomerIdReportModel>> GetCustomerIdReportModelListAsync(SingleDateSearchModel searchModel)
         {
+            var simplePayMethods = new[] { "Payments.SimplePay", "Payments.SimplePayWire" };
 
             var referenceDate = searchModel.Date ?? DateTime.UtcNow;
             var oneMonthAgo = referenceDate.AddDays(-30).Date;
 
-            var query = from o in _orderRepository.Table
+            var orders = _orderRepository.Table
+                                    .Where(o => !o.TesztRendeles && !o.Deleted 
+                                                && o.CreatedOnUtc >= oneMonthAgo 
+                                                && o.CreatedOnUtc < referenceDate); // Releváns rendelések kiszűrése
+
+            var query = from o in orders
                         join c in _customerRepository.Table on o.CustomerId equals c.Id
                         join s in _shipmentRepository.Table on o.Id equals s.OrderId
                         join a in _addressRepository.Table on o.BillingAddressId equals a.Id
-                        join oNote in _orderNoteRepository.Table on o.Id equals oNote.OrderId
-                        where oNote.Note.Contains("SimplePay tranzakció azonosító")
-                              && oNote.Note.Contains("Fizetési státusz / Payment Status: Paid")
-                              && o.CreatedOnUtc >= oneMonthAgo && o.CreatedOnUtc < referenceDate
-                              && !o.TesztRendeles && !o.Deleted
                         select new CustomerIdReportModel
                         {
                             OrderNumber = o.CustomOrderNumber,
                             CustomerId = a.SzuloAddressId.ToString(),
-                            SimplePayTransactionId = ExtractTransactionId(oNote.Note),
+                            SimplePayTransactionId = simplePayMethods.Contains(o.PaymentMethodSystemName)
+                                                     ? o.AuthorizationTransactionId
+                                                     : "-",
                             PaymentMethod = o.PaymentMethodSystemName,
                             Carrier = o.ShippingMethod,
                             TrackingNumber = s.TrackingNumber
@@ -609,35 +616,6 @@ namespace Nop.Plugin.Reports.CustomReports.Services
 
             return await query.ToListAsync();
         }
-
-        /// <summary>
-        /// Segítő metódus a noteokban szereplő tranzakció ID kivágásához
-        /// </summary>
-        /// <param name="note">Note ami tartalmazza a tranzakció ID-t</param>
-        /// <returns>A kivágott tranzakció ID</returns>
-        private static string ExtractTransactionId(string note)
-        {
-            try
-            {
-                var startMarker = "SimplePay tranzakció azonosító / Transaction Id: ";
-                var endMarker = "\n"; // Feltételezzük, hogy a sorvége egy új sor karakter.
-                var startIndex = note.IndexOf(startMarker, StringComparison.Ordinal) + startMarker.Length;
-
-                if (startIndex < startMarker.Length)
-                    return "N/A"; // Ha a kezdő index nem található.
-
-                var endIndex = note.IndexOf(endMarker, startIndex, StringComparison.Ordinal);
-                if (endIndex == -1)
-                    endIndex = note.Length; // Ha nincs új sor karakter, akkor a string végéig megyünk.
-
-                return note.Substring(startIndex, endIndex - startIndex).Trim();
-            }
-            catch
-            {
-                return "N/A"; // Hibakezelés.
-            }
-        }
-
 
         #endregion
 

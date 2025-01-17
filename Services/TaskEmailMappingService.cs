@@ -10,7 +10,7 @@ using System.Threading.Tasks;
 namespace Nop.Plugin.Reports.CustomReports.Services
 {
     /// <summary>
-    /// Service a riportokhoz tartozó scheduled task email adataihoz.
+    /// Egy olyan service, amivel kezelhetjük az adott riporthoz hozzárendelt email címeket, amikre elküldi a rendszer a beállított riportot.
     /// </summary>
     public interface ITaskEmailMappingService
     {
