@@ -14,6 +14,7 @@ using Nop.Services.Localization;
 using FluentMigrator.Runner;
 using Microsoft.Extensions.DependencyInjection;
 using Nop.Core.Infrastructure;
+using System;
 
 namespace Nop.Plugin.Reports.CustomReports
 {
@@ -60,9 +61,15 @@ namespace Nop.Plugin.Reports.CustomReports
             using (var scope = EngineContext.Current.Resolve<IServiceScopeFactory>().CreateScope())
             {
                 var runner = scope.ServiceProvider.GetRequiredService<IMigrationRunner>();
-
-                // Csak a megadott migráció futtatása
-                runner.MigrateUp(202501070930);
+                try
+                {
+                    runner.MigrateUp(20250117);
+                    await _logger.InformationAsync("Migráció sikeresen lefutva a CustomReports plugin telepítésekor!");
+                }
+                catch (Exception ex)
+                {
+                    await _logger.ErrorAsync($"Hiba történt a migráció futtatása közben: {ex.Message}");
+                }
             }
 
         }
@@ -73,6 +80,20 @@ namespace Nop.Plugin.Reports.CustomReports
         public override async Task UninstallAsync()
         {
             await base.UninstallAsync();
+
+            //using (var scope = EngineContext.Current.Resolve<IServiceScopeFactory>().CreateScope())
+            //{
+            //    var runner = scope.ServiceProvider.GetRequiredService<IMigrationRunner>();
+            //    try
+            //    {
+            //        runner.MigrateDown(20250117);
+            //        await _logger.InformationAsync("Migráció sikeresen törölve a CustomReports plugin törlésekor!");
+            //    }
+            //    catch (Exception ex)
+            //    {
+            //        await _logger.ErrorAsync($"Hiba történt a migráció törlése közben: {ex.Message}");
+            //    }
+            //}
         }
 
         /// <summary>

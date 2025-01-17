@@ -10,12 +10,17 @@ using Nop.Plugin.Reports.CustomReports.Domain;
 
 namespace Nop.Plugin.Reports.CustomReports.Migrations
 {
-    [Migration(202501070930)]
-    public class SchemaMigration : ForwardOnlyMigration
+    [Migration(20250117, "CreateTaskEmailMappingTable")]
+    public class SchemaMigration : Migration
     {
         public override void Up()
         {
             Create.TableFor<TaskEmailMappingRecord>();
+        }
+
+        public override void Down()
+        {
+            Delete.Table("TaskEmailMappingRecord");
         }
     }
 }
