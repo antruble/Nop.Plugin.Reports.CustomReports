@@ -17,6 +17,7 @@ using Nop.Core.Infrastructure;
 using System;
 using Nop.Services.Messages;
 using Nop.Core.Domain.Messages;
+using Nop.Services.Configuration;
 
 namespace Nop.Plugin.Reports.CustomReports
 {
@@ -31,6 +32,7 @@ namespace Nop.Plugin.Reports.CustomReports
         private readonly ILocalizationService _localizationService;
         private readonly IMessageTemplateService _messageTemplateService;
         private readonly ILogger _logger;
+        private readonly ISettingService _settingService;
         private readonly IWebHelper _webHelper;
 
         #endregion
@@ -42,6 +44,7 @@ namespace Nop.Plugin.Reports.CustomReports
             ILocalizationService localizationService,
             IMessageTemplateService messageTemplateService,
             ILogger logger,
+            ISettingService settingService,
             IWebHelper webHelper 
             ) 
         {
@@ -49,6 +52,7 @@ namespace Nop.Plugin.Reports.CustomReports
             _localizationService = localizationService;
             _messageTemplateService = messageTemplateService;
             _logger = logger;
+            _settingService = settingService;
             _webHelper = webHelper;
         }
 
@@ -63,7 +67,7 @@ namespace Nop.Plugin.Reports.CustomReports
         {
             await base.InstallAsync();
 
-            // Ellenőrizd, hogy létezik-e már a sablon
+            // Ellenőrzés, hogy létezik-e már az üzenet sablon, ha nem létrehozzuk
             var messageTemplate = await _messageTemplateService.GetMessageTemplatesByNameAsync("Reports.ExcelEmail");
             if (messageTemplate == null || messageTemplate.Count == 0)
             {
@@ -78,6 +82,17 @@ namespace Nop.Plugin.Reports.CustomReports
                     LimitedToStores = false
                 };
                 await _messageTemplateService.InsertMessageTemplateAsync(newTemplate);
+            }
+
+            // Ellenőrzés, hogy létezik-e már riporthoz tartozó kulcs a Settings táblában
+            var reportEmailsKey = GetReportEmailSchedulerSettingsKeyAsync();
+            var existingSetting = await _settingService.GetSettingByKeyAsync<string>(reportEmailsKey);
+
+            if (string.IsNullOrEmpty(existingSetting))
+            {
+                // Új beállítás létrehozása üres JSON értékkel
+                var emptyJsonValue = "{}";
+                await _settingService.SetSettingAsync(reportEmailsKey, emptyJsonValue);
             }
 
         }
@@ -293,7 +308,10 @@ namespace Nop.Plugin.Reports.CustomReports
             nopReport.ControllerName = newReportControllerName;
             nopReport.ActionName = "ShowReport";
         }
-
+        public static string GetReportEmailSchedulerSettingsKeyAsync()
+        {
+            return "ReportEmails";
+        }
         #endregion
     }
 }

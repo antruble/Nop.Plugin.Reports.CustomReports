@@ -87,7 +87,8 @@ namespace Nop.Plugin.Reports.CustomReports.Services
             var tokens = new List<Token>
             {
                 new Token("RecipientEmail", recipientEmail),
-                new Token("ReportDate", DateTime.UtcNow.ToString("yyyy-MM-dd"))
+                new Token("ReportName", recipientEmail),
+                new Token("Date", DateTime.UtcNow.ToString("yyyy-MM-dd"))
             };
 
             return await messageTemplates.SelectAwait(async messageTemplate =>

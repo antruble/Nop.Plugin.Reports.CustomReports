@@ -79,68 +79,42 @@ namespace Nop.Plugin.Reports.CustomReports.Tasks
                     var excelData = await _reportsModelFactory.FetchCustomerIdDataAsync(new SingleDateSearchModel { Date = new DateTime(2024, 01, 01) });
                     fileBytes = await _exportReportService.ExportCustomerIdToXlsAsync(excelData);
 
-                    //// Fájl mentése az ideiglenes mappába
-                    filePath = _fileProvider.Combine(_fileProvider.MapPath("~/wwwroot/files"), "data.xlsx");
+                    //// Fájl mentése a wwwrootba mappába
+                    var folderPath = _fileProvider.MapPath("~/wwwroot/files/excels");
+                    await _logger.InformationAsync($"Checking directory: {folderPath}");
+
+                    if (!_fileProvider.DirectoryExists(folderPath))
+                    {
+                        await _logger.InformationAsync($"Directory does not exist. Creating: {folderPath}");
+                        _fileProvider.CreateDirectory(folderPath);
+                    }
+                    else
+                    {
+                        await _logger.InformationAsync($"Directory already exists: {folderPath}");
+                    }
+
+                    filePath = _fileProvider.Combine(_fileProvider.MapPath(folderPath), "riportdata.xlsx");
                     await System.IO.File.WriteAllBytesAsync(filePath, fileBytes);
 
-                    //filePath = Path.Combine(Path.GetTempPath(), "CustomerIdReport.xlsx");
-                    //await System.IO.File.WriteAllBytesAsync(filePath, bytes);
                 }
                 catch (Exception ex)
                 {
                     await _logger.ErrorAsync($"Hiba az Excel generálása során: {ex.Message}");
                     return;
                 }
+                var emails = await _taskEmailMappingService.GetEmailsByTaskIdAsync(1);
+                if (emails.Any())
+                {
+                    foreach (var email in emails)
+                    {
+                        await _customWorkflowMessageService.SendCustomReportEmailAsync(email, filePath);
+                    }
+                }
+                else 
+                {
+                    await _logger.WarningAsync("Nem található email a reporthoz");
+                }
 
-                await _customWorkflowMessageService.SendCustomReportEmailAsync("torosdominik@gmail.com", filePath);
-
-                //// 2. Email címek lekérdezése a hozzárendelt Task ID alapján
-                //var emailRecords = await _taskEmailMappingService.GetEmailsByTaskIdAsync(1); // Ideiglenesen csak be van égetve az 1-es TaskId, mivel még csak 1 darab beégetett Task van fix 1-es ID-val
-
-                //if (!emailRecords.Any())
-                //{
-                //    await _logger.WarningAsync("Nincsenek email címek az adott TaskId-hoz.");
-                //    return;
-                //}
-
-                //// 3. Alapértelmezett email fiók lekérése és ellenőrzése
-
-                ////var defaultEmailAccount = await _emailAccountService.GetEmailAccountByIdAsync(3);  TESTER EMAIL
-                //var defaultEmailAccount = await _emailAccountService.GetEmailAccountByIdAsync(_emailAccountSettings.DefaultEmailAccountId);
-
-                //if (defaultEmailAccount == null)
-                //{
-                //    await _logger.ErrorAsync("Alapértelmezett email fiók nem található.");
-                //    return;
-                //}
-
-                //// 4. Email küldése a címzetteknek
-
-                //foreach (var record in emailRecords)
-                //{
-                //    var email = new QueuedEmail
-                //    {
-                //        Priority = QueuedEmailPriority.High,
-                //        From = defaultEmailAccount.Email,
-                //        FromName = defaultEmailAccount.DisplayName,
-                //        To = record.Email,
-                //        Subject = "Customer ID report",
-                //        Body = $"{DateTime.UtcNow}. Customer ID riport",
-                //        CreatedOnUtc = DateTime.UtcNow,
-                //        EmailAccountId = defaultEmailAccount.Id,
-                //        AttachmentFilePath = filePath
-                //    };
-
-                //    try
-                //    {
-                //        await _queuedEmailService.InsertQueuedEmailAsync(email);
-                //        await _logger.InformationAsync($"Email küldés a {record.Email} címre sikeresen rögzítve.");
-                //    }
-                //    catch (Exception ex)
-                //    {
-                //        await _logger.ErrorAsync($"Hiba az email küldése során a {record.Email} címre: {ex.Message}");
-                //    }
-                //}
             }
             catch (Exception ex)
             {
