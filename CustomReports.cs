@@ -15,6 +15,8 @@ using FluentMigrator.Runner;
 using Microsoft.Extensions.DependencyInjection;
 using Nop.Core.Infrastructure;
 using System;
+using Nop.Services.Messages;
+using Nop.Core.Domain.Messages;
 
 namespace Nop.Plugin.Reports.CustomReports
 {
@@ -27,6 +29,7 @@ namespace Nop.Plugin.Reports.CustomReports
 
         private readonly IPermissionService _permissionService;
         private readonly ILocalizationService _localizationService;
+        private readonly IMessageTemplateService _messageTemplateService;
         private readonly ILogger _logger;
         private readonly IWebHelper _webHelper;
 
@@ -37,12 +40,14 @@ namespace Nop.Plugin.Reports.CustomReports
         public CustomReports(
             IPermissionService permissionService,
             ILocalizationService localizationService,
+            IMessageTemplateService messageTemplateService,
             ILogger logger,
             IWebHelper webHelper 
             ) 
         {
             _permissionService = permissionService;
             _localizationService = localizationService;
+            _messageTemplateService = messageTemplateService;
             _logger = logger;
             _webHelper = webHelper;
         }
@@ -58,18 +63,21 @@ namespace Nop.Plugin.Reports.CustomReports
         {
             await base.InstallAsync();
 
-            using (var scope = EngineContext.Current.Resolve<IServiceScopeFactory>().CreateScope())
+            // Ellenőrizd, hogy létezik-e már a sablon
+            var messageTemplate = await _messageTemplateService.GetMessageTemplatesByNameAsync("Reports.ExcelEmail");
+            if (messageTemplate == null || messageTemplate.Count == 0)
             {
-                var runner = scope.ServiceProvider.GetRequiredService<IMigrationRunner>();
-                try
+                // Új sablon létrehozása
+                var newTemplate = new MessageTemplate
                 {
-                    runner.MigrateUp(20250117);
-                    await _logger.InformationAsync("Migráció sikeresen lefutva a CustomReports plugin telepítésekor!");
-                }
-                catch (Exception ex)
-                {
-                    await _logger.ErrorAsync($"Hiba történt a migráció futtatása közben: {ex.Message}");
-                }
+                    Name = "Reports.ExcelEmail",
+                    Subject = "Daily Report: {ReportName} ({Date})",
+                    Body = "<p>Hello,</p><p>Attached is the daily report for {Date}.</p><p>Best regards,</p>",
+                    IsActive = true,
+                    EmailAccountId = 1,
+                    LimitedToStores = false
+                };
+                await _messageTemplateService.InsertMessageTemplateAsync(newTemplate);
             }
 
         }
