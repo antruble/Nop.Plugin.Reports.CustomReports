@@ -334,7 +334,7 @@ namespace Nop.Plugin.Reports.CustomReports.Services
                         };
 
             
-            var data = await query.ToListAsync();
+            var data = await query.OrderByDescending(o => o.OrderId).ToListAsync();
 
             foreach (var item in data)
             {

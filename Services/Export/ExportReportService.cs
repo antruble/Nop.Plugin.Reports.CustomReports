@@ -49,19 +49,19 @@ namespace Nop.Plugin.Reports.CustomReports.Services.Export
             //property array
             var properties = new[]
             {
-                new PropertyByName<OrderSummaryReportModel>("Date", p => p.Period),
-                new PropertyByName<OrderSummaryReportModel>("Orders", p => p.NumOfOrders),
-                new PropertyByName<OrderSummaryReportModel>("Total quantity", p => p.TotalQuantity),
-                new PropertyByName<OrderSummaryReportModel>("Quantity/order", p => p.QuantityPerOrder), 
-                new PropertyByName<OrderSummaryReportModel>("OrderSubTotal (incl tax)", p => p.OrderSubtotalInclTax),
-                new PropertyByName<OrderSummaryReportModel>("Subtotal/order", p => p.SubTotalPerOrder), 
-                new PropertyByName<OrderSummaryReportModel>("OrderSubTotal (exl tax)", p => p.OrderSubtotalExclTax), 
-                new PropertyByName<OrderSummaryReportModel>("OrderSubtotalDiscount (incl tax)", p => p.OrderSubtotalDiscountInclTax),
-                new PropertyByName<OrderSummaryReportModel>("OrderShipping (incl tax)", p => p.OrderShippingInclTax), 
-                new PropertyByName<OrderSummaryReportModel>("PaymentMethodAdditionalFee (incl tax)", p => p.PaymentMethodAdditionalFeeInclTax), 
-                new PropertyByName<OrderSummaryReportModel>("OrderTax", p => p.OrderTax), 
-                new PropertyByName<OrderSummaryReportModel>("OrderTotal", p => p.OrderTotal), 
-                new PropertyByName<OrderSummaryReportModel>("OrderDiscount", p => p.OrderDiscount), 
+                new PropertyByName<OrderSummaryReportModel>("Dátum", p => p.Period),
+                new PropertyByName<OrderSummaryReportModel>("Rendelések száma", p => p.NumOfOrders),
+                new PropertyByName<OrderSummaryReportModel>("Rendelt termékek száma", p => p.TotalQuantity),
+                new PropertyByName<OrderSummaryReportModel>("Termék/rendelés", p => p.QuantityPerOrder), 
+                new PropertyByName<OrderSummaryReportModel>("Végösszeg (nettó)", p => p.OrderTotal), 
+                new PropertyByName<OrderSummaryReportModel>("Részösszeg (nettó)", p => p.OrderSubtotalInclTax),
+                new PropertyByName<OrderSummaryReportModel>("Részösszeg/rendelés", p => p.SubTotalPerOrder), 
+                new PropertyByName<OrderSummaryReportModel>("Részösszeg kedvezmény (nettó)", p => p.OrderSubtotalDiscountInclTax),
+                new PropertyByName<OrderSummaryReportModel>("Rendeléshez tartozó kedvezmény (nettó)", p => p.OrderDiscount), 
+                new PropertyByName<OrderSummaryReportModel>("Szállítási költség (nettó)", p => p.OrderShippingInclTax), 
+                new PropertyByName<OrderSummaryReportModel>("Extra fizetéshez tartozó költség (nettó)", p => p.PaymentMethodAdditionalFeeInclTax), 
+                new PropertyByName<OrderSummaryReportModel>("Bruttó részösszeg", p => p.OrderSubtotalExclTax), 
+                new PropertyByName<OrderSummaryReportModel>("Rendeléshez tartozó adó", p => p.OrderTax), 
             };
 
 
@@ -72,15 +72,15 @@ namespace Nop.Plugin.Reports.CustomReports.Services.Export
             //property array
             var properties = new[]
             {
-                new PropertyByName<PromotionSummaryReportModel>("NÉV", p => p.Name),
-                new PropertyByName<PromotionSummaryReportModel>("NAPI (db)", p => p.DailyUsageCount),
-                new PropertyByName<PromotionSummaryReportModel>("NAPI (nettó)", p => p.DailyTotalDiscountAmount),
-                new PropertyByName<PromotionSummaryReportModel>("NAPI (%)", p => p.DailyPercentage),
-                new PropertyByName<PromotionSummaryReportModel>("HAVI (db)", p => p.MonthlyUsageCount),
-                new PropertyByName<PromotionSummaryReportModel>("HAVI (nettó)", p => p.MonthlyTotalDiscountAmount),
-                new PropertyByName<PromotionSummaryReportModel>("HAVI (%)", p => p.MonthlyPercentage),
-                new PropertyByName<PromotionSummaryReportModel>("MARGIN", p => p.MarginAmount),
-                new PropertyByName<PromotionSummaryReportModel>("MARGIN (%)", p => p.MarginPercentage),
+                new PropertyByName<PromotionSummaryReportModel>("Név", p => p.Name),
+                new PropertyByName<PromotionSummaryReportModel>("Napi (db)", p => p.DailyUsageCount),
+                new PropertyByName<PromotionSummaryReportModel>("Napi (nettó)", p => p.DailyTotalDiscountAmount),
+                new PropertyByName<PromotionSummaryReportModel>("Napi (%)", p => p.DailyPercentage),
+                new PropertyByName<PromotionSummaryReportModel>("Havi (db)", p => p.MonthlyUsageCount),
+                new PropertyByName<PromotionSummaryReportModel>("Havi (nettó)", p => p.MonthlyTotalDiscountAmount),
+                new PropertyByName<PromotionSummaryReportModel>("Havi (%)", p => p.MonthlyPercentage),
+                new PropertyByName<PromotionSummaryReportModel>("Margin", p => p.MarginAmount),
+                new PropertyByName<PromotionSummaryReportModel>("Margin (%)", p => p.MarginPercentage),
             };
 
             return await new CustomPropertyManager<PromotionSummaryReportModel>(properties, _catalogSettings).ExportToXlsxAsync(list);
@@ -90,12 +90,12 @@ namespace Nop.Plugin.Reports.CustomReports.Services.Export
             //property array
             var properties = new[]
             {
-                new PropertyByName<CustomerIdReportModel>("RENDELÉSI SZÁM", p => p.OrderNumber),
-                new PropertyByName<CustomerIdReportModel>("VEVŐ ID", p => p.CustomerId),
-                new PropertyByName<CustomerIdReportModel>("SIMPLEPAY FIZETÉSI ID", p => p.SimplePayTransactionId),
-                new PropertyByName<CustomerIdReportModel>("FIZETÉS MÓDJA", p => p.PaymentMethod),
-                new PropertyByName<CustomerIdReportModel>("FUTÁRCÉG", p => p.Carrier),
-                new PropertyByName<CustomerIdReportModel>("NYOMKÖVETÉSI SZÁM", p => p.TrackingNumber),
+                new PropertyByName<CustomerIdReportModel>("Rendelés szám", p => p.OrderNumber),
+                new PropertyByName<CustomerIdReportModel>("Vevő ID", p => p.CustomerId),
+                new PropertyByName<CustomerIdReportModel>("Simplepay fizetés ID", p => p.SimplePayTransactionId),
+                new PropertyByName<CustomerIdReportModel>("Fizetés módja", p => p.PaymentMethod),
+                new PropertyByName<CustomerIdReportModel>("Futárcég", p => p.Carrier),
+                new PropertyByName<CustomerIdReportModel>("Nyomkövetési szám", p => p.TrackingNumber),
             };
 
             return await new CustomPropertyManager<CustomerIdReportModel>(properties, _catalogSettings).ExportToXlsxAsync(list);

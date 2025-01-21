@@ -33,6 +33,7 @@ namespace Nop.Plugin.Reports.CustomReports.Infrastructure
             services.AddScoped<ReportDataService>();
             services.AddScoped<ExportReportService>();
             services.AddScoped<IScheduleTask, RegisterEmailTask>();
+            services.AddScoped<ITaskEmailMappingService, TaskEmailMappingService>();
             services.AddScoped<CustomWorkflowMessageService>();
         }
 
