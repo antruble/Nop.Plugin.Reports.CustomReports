@@ -472,7 +472,7 @@ namespace Nop.Plugin.Reports.CustomReports.Services
                                 OrderDiscount = Math.Round(g.Sum(x => x.OrderDiscount))
                             };
 
-                var data = await query.ToListAsync();
+                var data = await query.OrderByDescending(q => q.Period).ToListAsync();
 
                 return data;
             }
@@ -530,7 +530,7 @@ namespace Nop.Plugin.Reports.CustomReports.Services
                                     MarginPercentage = 0 // Később töltjük ki
                                 };
 
-                    result = await queryOnPromotions.ToListAsync();
+                    result = await queryOnPromotions.OrderBy(q => q.Name).ToListAsync();
                     return result;
 
                 case 1: // MÁRKÁNKÉMT
@@ -553,7 +553,7 @@ namespace Nop.Plugin.Reports.CustomReports.Services
                                     MarginPercentage = 0 // Később töltjük ki
                                 };
 
-                    result = await queryOnBrands.ToListAsync();
+                    result = await queryOnBrands.OrderBy(q => q.Name).ToListAsync();
                     return result;
 
                 case 2: // KATEGÓRIÁNKÉNT
@@ -574,7 +574,7 @@ namespace Nop.Plugin.Reports.CustomReports.Services
                                     MarginPercentage = 0 // Később töltjük ki
                                 };
 
-                    result = await queryOnCategories.ToListAsync();
+                    result = await queryOnCategories.OrderBy(q => q.Name).ToListAsync();
                     return result;
 
                 default:
