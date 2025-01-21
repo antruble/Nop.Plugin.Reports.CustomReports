@@ -1,6 +1,4 @@
-﻿using Nop.Data;
-using Nop.Plugin.Reports.CustomReports.Domain;
-using Nop.Services.Configuration;
+﻿using Nop.Services.Configuration;
 using Nop.Services.Logging;
 using System;
 using System.Collections.Generic;
@@ -39,20 +37,32 @@ namespace Nop.Plugin.Reports.CustomReports.Services
 
     public class TaskEmailMappingService : ITaskEmailMappingService
     {
-        private readonly IRepository<TaskEmailMappingRecord> _taskEmailMappingRepository;
+
+        #region Fields
+
         private readonly ISettingService _settingService;
         private readonly ILogger _logger;
 
+        #endregion
+
+        #region Ctor
         public TaskEmailMappingService(
-            IRepository<TaskEmailMappingRecord> taskEmailMappingRepository, 
             ISettingService settingService,
             ILogger logger)
         {
             _settingService = settingService;
-            _taskEmailMappingRepository = taskEmailMappingRepository;
             _logger = logger;
         }
+        #endregion
 
+        #region Methods
+        /// <summary>
+        /// Az adott task ID-hoz tartozó beállított email címek lekérdezése az adatbázisból.
+        /// </summary>
+        /// <param name="taskId">A task azonosítója, amelyhez az email címeket le szeretnénk kérdezni.</param>
+        /// <returns>
+        /// Egy lista az adott task ID-hoz tartozó email címekről.
+        /// </returns>
         public async Task<IList<string>> GetEmailsByTaskIdAsync(int taskId)
         {
             try
@@ -78,6 +88,14 @@ namespace Nop.Plugin.Reports.CustomReports.Services
                 return new List<string>();
             }
         }
+
+        /// <summary>
+        /// A megadott email cím hozzáadása az adott task ID-hoz tartozó emailek listájához.
+        /// Ha a task ID még nem létezik, automatikusan létrehozza azt.
+        /// </summary>
+        /// <param name="taskId">A task azonosítója, amelyhez az email címet hozzá szeretnénk adni.</param>
+        /// <param name="email">Az email cím, amelyet hozzá szeretnénk adni.</param>
+        /// <exception cref="ArgumentException">A paraméterek nem megfelelőek, például az email cím üres.</exception>
 
         public async Task AddEmailToTaskAsync(int taskId, string email)
         {
@@ -115,6 +133,14 @@ namespace Nop.Plugin.Reports.CustomReports.Services
             }
         }
 
+        /// <summary>
+        /// Egy email cím eltávolítása az adott task ID-hoz tartozó email listából.
+        /// Ha az email cím az utolsó elem, akkor a task ID is törlésre kerül.
+        /// </summary>
+        /// <param name="taskId">A task azonosítója, amelyből az email címet el szeretnénk távolítani.</param>
+        /// <param name="email">Az email cím, amelyet el szeretnénk távolítani.</param>
+        /// <exception cref="ArgumentException">A paraméterek nem megfelelőek, például az email cím üres.</exception>
+
         public async Task RemoveEmailFromTaskAsync(int taskId, string email)
         {
             if (string.IsNullOrWhiteSpace(email))
@@ -149,8 +175,6 @@ namespace Nop.Plugin.Reports.CustomReports.Services
                         // Mentsd vissza a frissített JSON-t
                         var updatedJson = Newtonsoft.Json.JsonConvert.SerializeObject(emailMapping);
                         await _settingService.SetSettingAsync(reportEmailsKey, updatedJson);
-
-                        await _logger.InformationAsync($"Email '{email}' removed from task ID {taskId}.");
                     }
                     else
                     {
@@ -168,6 +192,7 @@ namespace Nop.Plugin.Reports.CustomReports.Services
             }
         }
 
-        
+        #endregion
+
     }
 }

@@ -30,10 +30,9 @@ namespace Nop.Plugin.Reports.CustomReports.Infrastructure
         {
             services.AddScoped<BaseReportFactory>();
             services.AddScoped<IReportsModelFactory, ReportsModelFactory>();
-            services.AddScoped<CustomReportService>();
+            services.AddScoped<ReportDataService>();
             services.AddScoped<ExportReportService>();
             services.AddScoped<IScheduleTask, RegisterEmailTask>();
-            services.AddScoped<ITaskEmailMappingService, TaskEmailMappingService>();
             services.AddScoped<CustomWorkflowMessageService>();
         }
 

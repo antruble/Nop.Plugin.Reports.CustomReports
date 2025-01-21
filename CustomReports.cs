@@ -75,8 +75,8 @@ namespace Nop.Plugin.Reports.CustomReports
                 var newTemplate = new MessageTemplate
                 {
                     Name = "Reports.ExcelEmail",
-                    Subject = "Daily Report: {ReportName} ({Date})",
-                    Body = "<p>Hello,</p><p>Attached is the daily report for {Date}.</p><p>Best regards,</p>",
+                    Subject = "Riport excel: %ReportName% (%EndDate%)",
+                    Body = "<p>A mellékletben található a riport az alábbi intervallum adatait tartalmazza: %StartDate% - %EndDate%.</p>",
                     IsActive = true,
                     EmailAccountId = 1,
                     LimitedToStores = false
@@ -103,20 +103,6 @@ namespace Nop.Plugin.Reports.CustomReports
         public override async Task UninstallAsync()
         {
             await base.UninstallAsync();
-
-            //using (var scope = EngineContext.Current.Resolve<IServiceScopeFactory>().CreateScope())
-            //{
-            //    var runner = scope.ServiceProvider.GetRequiredService<IMigrationRunner>();
-            //    try
-            //    {
-            //        runner.MigrateDown(20250117);
-            //        await _logger.InformationAsync("Migráció sikeresen törölve a CustomReports plugin törlésekor!");
-            //    }
-            //    catch (Exception ex)
-            //    {
-            //        await _logger.ErrorAsync($"Hiba történt a migráció törlése közben: {ex.Message}");
-            //    }
-            //}
         }
 
         /// <summary>

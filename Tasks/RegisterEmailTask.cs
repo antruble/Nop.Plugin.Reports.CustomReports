@@ -76,21 +76,16 @@ namespace Nop.Plugin.Reports.CustomReports.Tasks
                 try
                 {
                     // Riport adatok lekérése és exportálása Excel formátumba
-                    var excelData = await _reportsModelFactory.FetchCustomerIdDataAsync(new SingleDateSearchModel { Date = new DateTime(2024, 01, 01) });
+                    var excelData = await _reportsModelFactory.FetchCustomerIdDataAsync(new SingleDateSearchModel { Date = new DateTime(2024, 01, 01) }); //TODO: mai dátum legyen
                     fileBytes = await _exportReportService.ExportCustomerIdToXlsAsync(excelData);
 
                     //// Fájl mentése a wwwrootba mappába
                     var folderPath = _fileProvider.MapPath("~/wwwroot/files/excels");
-                    await _logger.InformationAsync($"Checking directory: {folderPath}");
 
                     if (!_fileProvider.DirectoryExists(folderPath))
                     {
                         await _logger.InformationAsync($"Directory does not exist. Creating: {folderPath}");
                         _fileProvider.CreateDirectory(folderPath);
-                    }
-                    else
-                    {
-                        await _logger.InformationAsync($"Directory already exists: {folderPath}");
                     }
 
                     filePath = _fileProvider.Combine(_fileProvider.MapPath(folderPath), "riportdata.xlsx");
@@ -107,12 +102,12 @@ namespace Nop.Plugin.Reports.CustomReports.Tasks
                 {
                     foreach (var email in emails)
                     {
-                        await _customWorkflowMessageService.SendCustomReportEmailAsync(email, filePath);
+                        await _customWorkflowMessageService.SendCustomReportEmailAsync(email, filePath, "Ügyfélszolgálati riport");
                     }
                 }
                 else 
                 {
-                    await _logger.WarningAsync("Nem található email a reporthoz");
+                    await _logger.WarningAsync("Nem található email a riporthoz");
                 }
 
             }

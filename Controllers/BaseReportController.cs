@@ -84,14 +84,14 @@ namespace Nop.Plugin.Reports.CustomReports.Controllers
         ///// <summary>
         ///// Visszaadja a plugin konfigurációs nézetét.
         ///// </summary>
-        //[AuthorizeAdmin]
-        //[Area(AreaNames.Admin)]
-        //public IActionResult Configure()
-        //{
-        //    return View("~/Plugins/Reports.CustomReports/Views/Configure.cshtml");
-        //}
+        [AuthorizeAdmin]
+        [Area(AreaNames.Admin)]
+        public IActionResult Configure()
+        {
+            return View("~/Plugins/Reports.CustomReports/Views/Configure.cshtml");
+        }
 
-        
+
 
 
     }

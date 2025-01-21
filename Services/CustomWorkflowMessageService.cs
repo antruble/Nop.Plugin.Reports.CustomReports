@@ -23,12 +23,17 @@ namespace Nop.Plugin.Reports.CustomReports.Services
 {
     public class CustomWorkflowMessageService : WorkflowMessageService
     {
+        #region Fields
+
         private readonly IEventPublisher _eventPublisher;
         private readonly IMessageTokenProvider _messageTokenProvider;
-        private readonly ILocalizationService _localizationService;
         private readonly ILogger _logger;   
         private readonly IStoreContext _storeContext;
-        private readonly ITokenizer _tokenizer;
+
+        #endregion
+
+        #region Ctor
+
         public CustomWorkflowMessageService(
             CommonSettings commonSettings,
             EmailAccountSettings emailAccountSettings,
@@ -69,13 +74,14 @@ namespace Nop.Plugin.Reports.CustomReports.Services
         {
             _eventPublisher = eventPublisher;
             _messageTokenProvider = messageTokenProvider;
-            _localizationService = localizationService;
             _logger = logger;
             _storeContext = storeContext;
-            _tokenizer = tokenizer;
         }
+        #endregion
 
-        public async Task<IList<int>> SendCustomReportEmailAsync(string recipientEmail, string attachmentFilePath = null)
+        #region Methods
+
+        public async Task<IList<int>> SendCustomReportEmailAsync(string recipientEmail, string attachmentFilePath = null, string reportName="Riport")
         {
             var currentStore = await _storeContext.GetCurrentStoreAsync();
             var languageId = 2;
@@ -86,9 +92,9 @@ namespace Nop.Plugin.Reports.CustomReports.Services
 
             var tokens = new List<Token>
             {
-                new Token("RecipientEmail", recipientEmail),
                 new Token("ReportName", recipientEmail),
-                new Token("Date", DateTime.UtcNow.ToString("yyyy-MM-dd"))
+                new Token("EndDate", DateTime.UtcNow.ToString("yyyy-MM-dd")),
+                new Token("StartDate", DateTime.UtcNow.Date.AddDays(-30).ToString("yyyy-MM-dd"))
             };
 
             return await messageTemplates.SelectAwait(async messageTemplate =>
@@ -107,5 +113,7 @@ namespace Nop.Plugin.Reports.CustomReports.Services
                 return await SendNotificationAsync(messageTemplate, emailAccount, languageId, tokens, toEmail, toName, attachmentFilePath);
             }).ToListAsync();
         }
+
+        #endregion
     }
 }

@@ -29,9 +29,9 @@ using Nop.Core.Domain.Common;
 namespace Nop.Plugin.Reports.CustomReports.Services
 {
     /// <summary>
-    /// A CustomReportsService osztály felelős különböző riportokhoz tartozó adatok elkészítéséért.
+    /// A ReportDataService osztály felelős különböző riportokhoz tartozó adatok lekérdezéséért.
     /// </summary>
-    public class CustomReportService
+    public class ReportDataService
     {
         #region Fields
 
@@ -61,7 +61,7 @@ namespace Nop.Plugin.Reports.CustomReports.Services
 
         #region Ctor
 
-        public CustomReportService(
+        public ReportDataService(
 
                 ICategoryService categoryService,
                 IDateTimeHelper dateTimeHelper,

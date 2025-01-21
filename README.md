@@ -28,7 +28,7 @@ A **CustomReports** plugin egy olyan bővítmény, amelyben új riportokat lehet
 
 ### 3. `ReportsModelFactory` kiegészítése
 - `FetchReportNameDataAsync` definiálása a többi riport mintájára
-- Szükség esetén segédfüggvényt definiálhatunk a `CustomReportService`-ben
+- Szükség esetén segédfüggvényt definiálhatunk a `ReportDataService`-ben
   
 ---
 

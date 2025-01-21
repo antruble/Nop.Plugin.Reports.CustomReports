@@ -20,7 +20,6 @@ namespace Nop.Plugin.Reports.CustomReports.Infrastructure
         public void RegisterRoutes(IEndpointRouteBuilder endpointRouteBuilder)
         {
             var logger = endpointRouteBuilder.ServiceProvider.GetRequiredService<ILogger<RouteProvider>>();
-            logger.LogInformation("Regisztrálva: ExtendedBestsellersReport");
 
             endpointRouteBuilder.MapControllerRoute(
                 name: "TestExtendedReport",
@@ -38,7 +37,7 @@ namespace Nop.Plugin.Reports.CustomReports.Infrastructure
             endpointRouteBuilder.MapControllerRoute(
                 name: "ConfigureCustomReports",
                 pattern: "Admin/CustomReports/Configure",
-                defaults: new { controller = "ReportHelper", action = "Configure", area = "Admin" });
+                defaults: new { controller = "BaseReport", action = "Configure", area = "Admin" });
         }
 
         /// <summary>

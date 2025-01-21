@@ -35,7 +35,7 @@ namespace Nop.Plugin.Reports.CustomReports.Factories.CustomerReports
     {
         #region Fields
 
-        private readonly CustomReportService _customReportService;
+        private readonly ReportDataService _reportDataService;
 
         private readonly ICategoryService _categoryService;
         private readonly ICustomerReportService _customerReportService;
@@ -52,7 +52,7 @@ namespace Nop.Plugin.Reports.CustomReports.Factories.CustomerReports
         #region Ctor
 
         public ReportsModelFactory(
-            CustomReportService customReportService,
+            ReportDataService reportDataService,
 
             ICategoryService categoryService,
             ICustomerReportService customerReportService,
@@ -65,7 +65,7 @@ namespace Nop.Plugin.Reports.CustomReports.Factories.CustomerReports
             ILogger logger
             )
         {
-            _customReportService = customReportService;
+            _reportDataService = reportDataService;
 
             _categoryService = categoryService;
             _customerReportService = customerReportService;
@@ -108,7 +108,7 @@ namespace Nop.Plugin.Reports.CustomReports.Factories.CustomerReports
                 {
                     Date = g.Key,
                     Count = g.Count(),
-                    ReturningCustomerCount = g.Count(o => _customReportService.IsReturningCustomerAsync(o.CustomerId, o.OrderGuid).Result)
+                    ReturningCustomerCount = g.Count(o => _reportDataService.IsReturningCustomerAsync(o.CustomerId, o.OrderGuid).Result)
                 })
                 .ToList();
 
@@ -123,7 +123,7 @@ namespace Nop.Plugin.Reports.CustomReports.Factories.CustomerReports
                             : (DateTime?)_dateTimeHelper.ConvertToUtcTime(searchModel.EndDate.Value, await _dateTimeHelper.GetCurrentTimeZoneAsync()).AddDays(1);
 
             // Használt kuponok lekérdezése az időszakra
-            var discountReportModelList = await _customReportService.GetDiscountReportModelListByDateAsync(
+            var discountReportModelList = await _reportDataService.GetDiscountReportModelListByDateAsync(
                 createdFromUtc: startDateValue,
                 createdToUtc: endDateValue
             );
@@ -140,7 +140,7 @@ namespace Nop.Plugin.Reports.CustomReports.Factories.CustomerReports
                             : (DateTime?)_dateTimeHelper.ConvertToUtcTime(searchModel.EndDate.Value, await _dateTimeHelper.GetCurrentTimeZoneAsync()).AddDays(1);
 
             // Összes regisztráció, és az intervallumon belüli regisztrációk számának lekérdezése egy tupleként
-            var amounts = await _customReportService.GetRegisteredCustomersCountsAsync(startDateValue, endDateValue);
+            var amounts = await _reportDataService.GetRegisteredCustomersCountsAsync(startDateValue, endDateValue);
 
             // Egy soros report modell előkészítése
             result.Add(new RegisteredCustomersReportModel
@@ -161,7 +161,7 @@ namespace Nop.Plugin.Reports.CustomReports.Factories.CustomerReports
                             : (DateTime?)_dateTimeHelper.ConvertToUtcTime(searchModel.EndDate.Value, await _dateTimeHelper.GetCurrentTimeZoneAsync()).AddDays(1);
 
             // Összes feliratkozás, és az intervallumon belüli feliratkózások számának lekérdezése egy tupleként
-            var amounts = await _customReportService.GetShoperiaSubscriptionsCountsAsync(startDateValue, endDateValue);
+            var amounts = await _reportDataService.GetShoperiaSubscriptionsCountsAsync(startDateValue, endDateValue);
 
             // Egy soros report modell előkészítése
             result.Add(new ShoperiaPlusSubscriptionsReportModel
@@ -182,7 +182,7 @@ namespace Nop.Plugin.Reports.CustomReports.Factories.CustomerReports
                             : (DateTime?)_dateTimeHelper.ConvertToUtcTime(searchModel.EndDate.Value, await _dateTimeHelper.GetCurrentTimeZoneAsync()).AddDays(1);
 
             // Visszaküldött rendelések számának lekérdezése az időszakban
-            var amount = await _customReportService.GetReturnedOrdersCountsAsync(startDateValue, endDateValue);
+            var amount = await _reportDataService.GetReturnedOrdersCountsAsync(startDateValue, endDateValue);
 
             // Egy soros report modell előkészítése
             result.Add(new ReturnedOrdersReportModel
@@ -202,7 +202,7 @@ namespace Nop.Plugin.Reports.CustomReports.Factories.CustomerReports
             if (searchModel == null)
                 throw new ArgumentNullException(nameof(searchModel));
 
-            var bestsellers = await _customReportService.GetBestsellersReportAsync(searchModel);
+            var bestsellers = await _reportDataService.GetBestsellersReportAsync(searchModel);
 
             //prepare list model
             var productIds = bestsellers.Select(b => b.ProductId).Distinct().ToList();
@@ -364,7 +364,7 @@ namespace Nop.Plugin.Reports.CustomReports.Factories.CustomerReports
                     Sku = product.Sku,
                     StockQuantity = await _productService.GetTotalStockQuantityAsync(product),
                     Published = product.Published,
-                    Problema = await _customReportService.TermekKategoriaProblemaSzoveg(product)
+                    Problema = await _reportDataService.TermekKategoriaProblemaSzoveg(product)
                 }).ToListAsync());
             }
             //Problémás termékek => Nem aktív de van készleten 
@@ -430,7 +430,7 @@ namespace Nop.Plugin.Reports.CustomReports.Factories.CustomerReports
             if (searchModel == null)
                 throw new ArgumentNullException(nameof(searchModel));
 
-            var result = await _customReportService.GetOrderDetailsReportModelListByDateAsync(searchModel);
+            var result = await _reportDataService.GetOrderDetailsReportModelListByDateAsync(searchModel);
             return result.ToList();
         }
 
@@ -442,18 +442,19 @@ namespace Nop.Plugin.Reports.CustomReports.Factories.CustomerReports
             if (searchModel == null)
                 throw new ArgumentNullException(nameof(searchModel));
 
-            var result = await _customReportService.GetOrderSummaryReportModelListAsync(searchModel);
+            var result = await _reportDataService.GetOrderSummaryReportModelListAsync(searchModel);
             return result.ToList();
         }
 
         #endregion
+        
         #region PromotionSummary
         public async Task<List<PromotionSummaryReportModel>> FetchPromotionSummaryDataAsync(PromotionSummarySearchModel searchModel)
         {
             if (searchModel == null)
                 throw new ArgumentNullException(nameof(searchModel));
 
-            var result = await _customReportService.GetPromotionSummaryReportModelListAsync(searchModel);
+            var result = await _reportDataService.GetPromotionSummaryReportModelListAsync(searchModel);
             return result.ToList();
         }
 
@@ -465,7 +466,7 @@ namespace Nop.Plugin.Reports.CustomReports.Factories.CustomerReports
             if (searchModel == null)
                 throw new ArgumentNullException(nameof(searchModel));
 
-            var result = await _customReportService.GetCustomerIdReportModelListAsync(searchModel);
+            var result = await _reportDataService.GetCustomerIdReportModelListAsync(searchModel);
             return result.ToList();
         }
         #endregion
