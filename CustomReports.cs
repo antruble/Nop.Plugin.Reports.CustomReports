@@ -18,6 +18,8 @@ using System;
 using Nop.Services.Messages;
 using Nop.Core.Domain.Messages;
 using Nop.Services.Configuration;
+using Nop.Services.ScheduleTasks;
+using Nop.Core.Domain.ScheduleTasks;
 
 namespace Nop.Plugin.Reports.CustomReports
 {
@@ -33,6 +35,7 @@ namespace Nop.Plugin.Reports.CustomReports
         private readonly IMessageTemplateService _messageTemplateService;
         private readonly ILogger _logger;
         private readonly ISettingService _settingService;
+        private readonly IScheduleTaskService _scheduleTaskService;
         private readonly IWebHelper _webHelper;
 
         #endregion
@@ -45,6 +48,7 @@ namespace Nop.Plugin.Reports.CustomReports
             IMessageTemplateService messageTemplateService,
             ILogger logger,
             ISettingService settingService,
+            IScheduleTaskService scheduleTaskService,
             IWebHelper webHelper 
             ) 
         {
@@ -53,6 +57,7 @@ namespace Nop.Plugin.Reports.CustomReports
             _messageTemplateService = messageTemplateService;
             _logger = logger;
             _settingService = settingService;
+            _scheduleTaskService = scheduleTaskService;
             _webHelper = webHelper;
         }
 
@@ -95,6 +100,23 @@ namespace Nop.Plugin.Reports.CustomReports
                 await _settingService.SetSettingAsync(reportEmailsKey, emptyJsonValue);
             }
 
+            var isTaskExist = (await _scheduleTaskService.GetAllTasksAsync())
+                .Any(t => t.Type == "Nop.Plugin.Reports.CustomReports.Tasks.RegisterEmailTask, Nop.Plugin.Reports.CustomReports");
+            if (!isTaskExist)
+            {
+                var lastEnabledUtc = DateTime.UtcNow;
+
+                await _scheduleTaskService.InsertTaskAsync(new ScheduleTask
+                {
+                    Name = "Reports plugin: Kiküldendő emailek regisztrálása",
+                    Seconds = 86400,
+                    Type = "Nop.Plugin.Reports.CustomReports.Tasks.RegisterEmailTask, Nop.Plugin.Reports.CustomReports",
+                    Enabled = true,
+                    LastEnabledUtc = lastEnabledUtc,
+                    LastSuccessUtc = DateTime.UtcNow.Date.AddHours(8),
+                    StopOnError = false
+                });
+            }
         }
 
         /// <summary>
