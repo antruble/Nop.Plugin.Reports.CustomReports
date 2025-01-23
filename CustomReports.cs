@@ -265,14 +265,14 @@ namespace Nop.Plugin.Reports.CustomReports
                     IconClass = "far fa-dot-circle",
                     ControllerName = "OrderSummary"
                 },
-                //new
-                //{
-                //    IsGroup = false,
-                //    SystemName = "Reports.PromotionSummary",
-                //    Title = await _localizationService.GetResourceAsync("Admin.Reports.PromotionSummary.Title"),
-                //    IconClass = "far fa-dot-circle",
-                //    ControllerName = "PromotionSummary"
-                //},
+                new
+                {
+                    IsGroup = false,
+                    SystemName = "Reports.PromotionSummary",
+                    Title = await _localizationService.GetResourceAsync("Admin.Reports.PromotionSummary.Title"),
+                    IconClass = "far fa-dot-circle",
+                    ControllerName = "PromotionSummary"
+                },
                 new
                 {
                     IsGroup = false,

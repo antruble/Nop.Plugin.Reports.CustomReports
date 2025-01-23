@@ -17,8 +17,8 @@ namespace Nop.Plugin.Reports.CustomReports.Models.SearchModels
         public IList<SelectListItem> AvailableCategoryOptions { get; set; }
 
         public PromotionSummarySearchModel() 
-        { 
-            
+        {
+            AvailableCategoryOptions = new List<SelectListItem>();
         }
     }
 

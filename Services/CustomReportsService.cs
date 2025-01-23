@@ -42,6 +42,7 @@ namespace Nop.Plugin.Reports.CustomReports.Services
 
         private readonly IRepository<Akcio> _promotionRepository;
         private readonly IRepository<Address> _addressRepository;
+        private readonly IRepository<Category> _categoryRepository;
         private readonly IRepository<Customer> _customerRepository;
         private readonly IRepository<DiscountUsageHistory> _discountUsageHistoryRepository;
         private readonly IRepository<Discount> _discountRepository;
@@ -70,6 +71,7 @@ namespace Nop.Plugin.Reports.CustomReports.Services
 
                 IRepository<Akcio> promotionRepository,
                 IRepository<Address> addressRepository,
+                IRepository<Category> categoryRepository,
                 IRepository<Customer> customerRepository,
                 IRepository<DiscountUsageHistory> discountUsageHistoryRepository,
                 IRepository<Discount> discountRepository,
@@ -92,6 +94,7 @@ namespace Nop.Plugin.Reports.CustomReports.Services
 
             _addressRepository = addressRepository;
             _promotionRepository = promotionRepository;
+            _categoryRepository = categoryRepository;
             _customerRepository = customerRepository;
             _discountUsageHistoryRepository = discountUsageHistoryRepository;
             _discountRepository = discountRepository;
@@ -482,8 +485,8 @@ namespace Nop.Plugin.Reports.CustomReports.Services
         #region PromotionSummary
         public async Task<IList<PromotionSummaryReportModel>> GetPromotionSummaryReportModelListAsync(PromotionSummarySearchModel searchModel)
         {
-            //var currentDate = DateTime.UtcNow;
-            var currentDate = new DateTime(2023, 11, 30);
+            var currentDate = DateTime.UtcNow.Date;
+            //var currentDate = new DateTime(2023, 11, 30);
 
 
             // 1. Aktív akciók lekérdezése
@@ -499,88 +502,106 @@ namespace Nop.Plugin.Reports.CustomReports.Services
             var oldestPromotionStartDate = activePromotions.Min(p => p.StartDateUtc);
 
             // 2. OrderItems szűrése az akciókhoz
-            var filteredOrderItems = await (from orderItem in _orderItemRepository.Table
-                                            join order in _orderRepository.Table on orderItem.OrderId equals order.Id
-                                            where !order.Deleted && !order.TesztRendeles 
-                                                  && order.CreatedOnUtc >= oldestPromotionStartDate && orderItem.AkcioVolt
-                                            select new { orderItem, order.CreatedOnUtc })
-                                   .ToListAsync();
+            var filteredOrderItems = await _orderRepository.Table
+                                        .Where(order => order.CreatedOnUtc >= oldestPromotionStartDate && !order.TesztRendeles && !order.Deleted)
+                                        .Join(_orderItemRepository.Table.Where(oi => oi.AkcioVolt), 
+                                            order => order.Id, orderItem => orderItem.OrderId, 
+                                            (order, orderItem) => new { orderItem, order.CreatedOnUtc})
+                                        .ToListAsync();
 
             var activePromotionIds = activePromotions.Select(ap => ap.Id).ToHashSet();
 
-            List<PromotionSummaryReportModel> result = new List<PromotionSummaryReportModel>();
-
+            // 3. Esetfüggő csoportosítás
+            List<PromotionSummaryReportModel> result;
             switch (searchModel.FilterCategoryId)
             {
-                case 0: // AKCIÓNKÉNT
-                    var queryOnPromotions = from oi in filteredOrderItems
-                                join p in _productRepository.Table on oi.orderItem.ProductId equals p.Id
-                                where activePromotionIds.Contains(p.AkcioId)
-                                group new { oi.orderItem, p, oi.CreatedOnUtc } by new { p.AkcioId, p.AkcioName } into g
-                                select new PromotionSummaryReportModel
-                                {
-                                    Name = g.Key.AkcioName ?? "Unknown",
-                                    MonthlyUsageCount = g.Sum(x => x.orderItem.Quantity),
-                                    MonthlyTotalDiscountAmount = (int)Math.Round(g.Sum(x => x.orderItem.PriceInclTax)),
-                                    DailyUsageCount = 0, // Később töltjük ki
-                                    DailyTotalDiscountAmount = 0, // Később töltjük ki
-                                    DailyPercentage = 0, // Később töltjük ki
-                                    MonthlyPercentage = 0, // Később töltjük ki
-                                    MarginAmount = 0, // Később töltjük ki
-                                    MarginPercentage = 0 // Később töltjük ki
-                                };
+                case 0: // Akciók szerint
+                    result = await (from item in filteredOrderItems
+                              join product in _productRepository.Table on item.orderItem.ProductId equals product.Id
+                              where activePromotionIds.Contains(product.AkcioId)
+                              group item by new { product.AkcioId, product.AkcioName } into g
+                              select new PromotionSummaryReportModel
+                              {
+                                  Name = g.Key.AkcioName ?? "Unknown",
+                                  MonthlyUsageCount = g.Sum(x => x.orderItem.Quantity),
+                                  MonthlyTotalDiscountAmount = (int)Math.Round(g.Sum(x => (decimal)x.orderItem.PriceInclTax)),
+                                  DailyUsageCount = g.Where(x => x.CreatedOnUtc.Date == currentDate).Sum(x => x.orderItem.Quantity),
+                                  DailyTotalDiscountAmount = g.Where(x => x.CreatedOnUtc.Date == currentDate)
+                                                              .Sum(x => (int)Math.Round((decimal)x.orderItem.PriceInclTax)),
+                                  MarginAmount = g.Sum(x => x.orderItem.PriceInclTax - x.orderItem.OriginalProductCost),
+                                  // Később számoljuk ki
+                                  MarginPercentage = 0,
+                                  DailyPercentage = 0, 
+                                  MonthlyPercentage = 0,
+                              }).ToListAsync();
+                    break;
 
-                    result = await queryOnPromotions.OrderBy(q => q.Name).ToListAsync();
-                    return result;
+                case 1: // Márkák szerint
+                    result = await (from item in filteredOrderItems
+                              join product in _productRepository.Table on item.orderItem.ProductId equals product.Id
+                              join mapping in _productManufacturerMappingRepository.Table on product.Id equals mapping.ProductId
+                              join manufacturer in _manufacturerRepository.Table on mapping.ManufacturerId equals manufacturer.Id
+                              where activePromotionIds.Contains(product.AkcioId)
+                              group item by new { manufacturer.Id, manufacturer.Name } into g
+                              select new PromotionSummaryReportModel
+                              {
+                                  Name = g.Key.Name ?? "Unknown",
+                                  MonthlyUsageCount = g.Sum(x => x.orderItem.Quantity),
+                                  MonthlyTotalDiscountAmount = (int)Math.Round(g.Sum(x => (decimal)x.orderItem.PriceInclTax)),
+                                  DailyUsageCount = g.Where(x => x.CreatedOnUtc.Date == currentDate).Sum(x => x.orderItem.Quantity),
+                                  DailyTotalDiscountAmount = g.Where(x => x.CreatedOnUtc.Date == currentDate)
+                                                              .Sum(x => (int)Math.Round((decimal)x.orderItem.PriceInclTax)),
+                                  MarginAmount = g.Sum(x => x.orderItem.PriceInclTax - x.orderItem.OriginalProductCost),
+                                  // Később számoljuk ki
+                                  MarginPercentage = 0,
+                                  DailyPercentage = 0,
+                                  MonthlyPercentage = 0,
+                              }).ToListAsync();
+                    break;
 
-                case 1: // MÁRKÁNKÉMT
-                    var queryOnBrands = from oi in filteredOrderItems
-                                join product in _productRepository.Table on oi.orderItem.ProductId equals product.Id
-                                join mapping in _productManufacturerMappingRepository.Table on product.Id equals mapping.ProductId
-                                join manufacturer in _manufacturerRepository.Table on mapping.ManufacturerId equals manufacturer.Id
-                                where activePromotionIds.Contains(product.AkcioId)
-                                group new { oi.orderItem, product, manufacturer } by new { manufacturer.Id, manufacturer.Name } into g
-                                select new PromotionSummaryReportModel
-                                {
-                                    Name = g.Key.Name ?? "Unknown",
-                                    MonthlyUsageCount = g.Sum(x => x.orderItem.Quantity),
-                                    MonthlyTotalDiscountAmount = (int)Math.Round(g.Sum(x => x.orderItem.PriceInclTax)),
-                                    DailyUsageCount = 0, // Később töltjük ki
-                                    DailyTotalDiscountAmount = 0, // Később töltjük ki
-                                    DailyPercentage = 0, // Később töltjük ki
-                                    MonthlyPercentage = 0, // Később töltjük ki
-                                    MarginAmount = 0, // Később töltjük ki
-                                    MarginPercentage = 0 // Később töltjük ki
-                                };
-
-                    result = await queryOnBrands.OrderBy(q => q.Name).ToListAsync();
-                    return result;
-
-                case 2: // KATEGÓRIÁNKÉNT
-                    var queryOnCategories = from oi in filteredOrderItems
-                                join p in _productRepository.Table on oi.orderItem.ProductId equals p.Id
-                                where activePromotionIds.Contains(p.AkcioId)
-                                group new { oi.orderItem, p, oi.CreatedOnUtc } by new { p.AkcioId, p.AkcioName } into g
-                                select new PromotionSummaryReportModel
-                                {
-                                    Name = g.Key.AkcioName ?? "Unknown",
-                                    MonthlyUsageCount = g.Sum(x => x.orderItem.Quantity),
-                                    MonthlyTotalDiscountAmount = (int)Math.Round(g.Sum(x => x.orderItem.PriceInclTax)),
-                                    DailyUsageCount = 0, // Később töltjük ki
-                                    DailyTotalDiscountAmount = 0, // Később töltjük ki
-                                    DailyPercentage = 0, // Később töltjük ki
-                                    MonthlyPercentage = 0, // Később töltjük ki
-                                    MarginAmount = 0, // Később töltjük ki
-                                    MarginPercentage = 0 // Később töltjük ki
-                                };
-
-                    result = await queryOnCategories.OrderBy(q => q.Name).ToListAsync();
-                    return result;
+                case 2: // Kategóriák szerint
+                    result = await (from item in filteredOrderItems
+                              join product in _productRepository.Table on item.orderItem.ProductId equals product.Id
+                              join mapping in _productCategoryMappingRepository.Table on product.Id equals mapping.ProductId
+                              join category in _categoryRepository.Table on mapping.CategoryId equals category.Id
+                              where activePromotionIds.Contains(product.AkcioId)
+                              group item by new { category.Id, category.Name } into g
+                              select new PromotionSummaryReportModel
+                              {
+                                  Name = g.Key.Name ?? "Unknown",
+                                  MonthlyUsageCount = g.Sum(x => x.orderItem.Quantity),
+                                  MonthlyTotalDiscountAmount = (int)Math.Round(g.Sum(x => (decimal)x.orderItem.PriceInclTax)),
+                                  DailyUsageCount = g.Where(x => x.CreatedOnUtc.Date == currentDate).Sum(x => x.orderItem.Quantity),
+                                  DailyTotalDiscountAmount = g.Where(x => x.CreatedOnUtc.Date == currentDate)
+                                                              .Sum(x => (int)Math.Round((decimal)x.orderItem.PriceInclTax)),
+                                  MarginAmount = g.Sum(x => x.orderItem.PriceInclTax - x.orderItem.OriginalProductCost),
+                                  // Később számoljuk ki
+                                  MarginPercentage = 0,
+                                  DailyPercentage = 0,
+                                  MonthlyPercentage = 0,
+                              }).ToListAsync();
+                    break;
 
                 default:
                     await _logger.ErrorAsync($"GetPromotionSummaryReportModelListAsync függvényben a search model FilterCategoryId adattagja rosszul definiált értékkel rendelkezik: {searchModel.FilterCategoryId}");
-                    return result;
+                    return new List<PromotionSummaryReportModel>();
             }
+
+            // 4. Eredmények rendezése és százalékok kiszámítása
+            var totalDailyDiscountAmount = result.Sum(x => x.DailyTotalDiscountAmount);
+            var totalMonthlyDiscountAmount = result.Sum(x => x.MonthlyTotalDiscountAmount);
+            var totalMarginAmount = result.Sum(x => x.MarginAmount);
+
+            // Százalékok kiszámítása
+            result = result.Select(x =>
+            {
+                x.DailyPercentage = totalDailyDiscountAmount > 0 ? (decimal)x.DailyTotalDiscountAmount / totalDailyDiscountAmount * 100 : 0;
+                x.MonthlyPercentage = totalMonthlyDiscountAmount > 0 ? (decimal)x.MonthlyTotalDiscountAmount / totalMonthlyDiscountAmount * 100 : 0;
+                x.MarginPercentage = totalMarginAmount > 0 ? (decimal)x.MarginAmount / totalMarginAmount * 100 : 0;
+                return x;
+            }).OrderBy(r => r.Name).ToList();
+
+            return result;
         }
         #endregion
 

@@ -17,7 +17,7 @@ using Nop.Plugin.Reports.CustomReports.Services.Export;
 
 namespace Nop.Plugin.Reports.CustomReports.Controllers.PromotionSummary
 {
-    public class PromotionSummaryController : BaseReportController<EmptySearchModel, PromotionSummaryListModel, PromotionSummaryReportModel>
+    public class PromotionSummaryController : BaseReportController<PromotionSummarySearchModel, PromotionSummaryListModel, PromotionSummaryReportModel>
     {
         private readonly ExportReportService _exportReportService;
         private readonly INotificationService _notificationService;

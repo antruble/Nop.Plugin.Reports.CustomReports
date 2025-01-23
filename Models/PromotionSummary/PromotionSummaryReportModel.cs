@@ -12,25 +12,25 @@ namespace Nop.Plugin.Reports.CustomReports.Models.PromotionSummary
         public int DailyUsageCount  {  get; set; }
 
         [NopResourceDisplayName("Admin.Reports.PromotionSummary.Fields.DailyTotalDiscountAmount")]
-        public int DailyTotalDiscountAmount  {  get; set; }
+        public decimal DailyTotalDiscountAmount  {  get; set; }
         
         [NopResourceDisplayName("Admin.Reports.PromotionSummary.Fields.DailyPercentage")]
-        public int DailyPercentage  {  get; set; }
+        public decimal DailyPercentage  {  get; set; }
 
         [NopResourceDisplayName("Admin.Reports.PromotionSummary.Fields.MonthlyUsageCount")]
         public int MonthlyUsageCount  {  get; set; }
 
         [NopResourceDisplayName("Admin.Reports.PromotionSummary.Fields.MonthlyTotalDiscountAmount")]
-        public int MonthlyTotalDiscountAmount  {  get; set; }
+        public decimal MonthlyTotalDiscountAmount  {  get; set; }
 
         [NopResourceDisplayName("Admin.Reports.PromotionSummary.Fields.MonthlyPercentage")]
-        public int MonthlyPercentage  {  get; set; }
+        public decimal MonthlyPercentage  {  get; set; }
 
         [NopResourceDisplayName("Admin.Reports.PromotionSummary.Fields.MarginAmount")]
-        public double MarginAmount { get; set; }
+        public decimal MarginAmount { get; set; }
 
         [NopResourceDisplayName("Admin.Reports.PromotionSummary.Fields.MarginPercentage")]
-        public double MarginPercentage { get; set; }
+        public decimal MarginPercentage { get; set; }
 
     }
 }
