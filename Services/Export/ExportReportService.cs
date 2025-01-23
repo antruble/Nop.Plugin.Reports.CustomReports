@@ -67,7 +67,7 @@ namespace Nop.Plugin.Reports.CustomReports.Services.Export
 
             return await new CustomPropertyManager<OrderSummaryReportModel>(properties, _catalogSettings).ExportToXlsxAsync(daily, monthly, "Daily", "Monthly");
         }
-        public async Task<byte[]> ExportPromotionSummaryToXlsAsync(IList<PromotionSummaryReportModel> list)
+        public async Task<byte[]> ExportPromotionSummaryToXlsAsync(IList<PromotionSummaryReportModel> onPromotions, IList<PromotionSummaryReportModel> onManufacturers, IList<PromotionSummaryReportModel> onCategories)
         {
             //property array
             var properties = new[]
@@ -83,7 +83,7 @@ namespace Nop.Plugin.Reports.CustomReports.Services.Export
                 new PropertyByName<PromotionSummaryReportModel>("Margin (%)", p => p.MarginPercentage),
             };
 
-            return await new CustomPropertyManager<PromotionSummaryReportModel>(properties, _catalogSettings).ExportToXlsxAsync(list);
+            return await new CustomPropertyManager<PromotionSummaryReportModel>(properties, _catalogSettings).ExportToXlsxAsync(onPromotions, onManufacturers, onCategories, "Akciónként", "Márkénként", "Kategóriánként");
         }
         public async Task<byte[]> ExportCustomerIdToXlsAsync(IList<CustomerIdReportModel> list)
         {

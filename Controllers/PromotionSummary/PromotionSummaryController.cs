@@ -42,11 +42,13 @@ namespace Nop.Plugin.Reports.CustomReports.Controllers.PromotionSummary
             if (!await base.PermissionService.AuthorizeAsync(StandardPermissionProvider.ManageOrders))
                 return AccessDeniedView();
 
-            var data = await base.ReportsModelFactory.FetchPromotionSummaryDataAsync(searchModel);
+            var dataOnPromotions = await base.ReportsModelFactory.FetchPromotionSummaryDataAsync(new PromotionSummarySearchModel { FilterCategoryId = 0});
+            var dataOnManufacturers = await base.ReportsModelFactory.FetchPromotionSummaryDataAsync(new PromotionSummarySearchModel { FilterCategoryId = 1});
+            var dataOnCategories = await base.ReportsModelFactory.FetchPromotionSummaryDataAsync(new PromotionSummarySearchModel { FilterCategoryId = 2});
 
             try
             {
-                var bytes = await _exportReportService.ExportPromotionSummaryToXlsAsync(data);
+                var bytes = await _exportReportService.ExportPromotionSummaryToXlsAsync(dataOnPromotions, dataOnManufacturers, dataOnCategories);
                 return File(bytes, MimeTypes.TextXlsx, "PromotionSummary.xlsx");
             }
             catch (Exception exc)
