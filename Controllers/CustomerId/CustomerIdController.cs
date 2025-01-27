@@ -21,8 +21,10 @@ using System.IO;
 using Nop.Core.Domain.ScheduleTasks;
 using Nop.Services.ScheduleTasks;
 using Nop.Plugin.Reports.CustomReports.Services;
-using System.ComponentModel.DataAnnotations;
+//using System.ComponentModel.DataAnnotations;
 using FluentValidation;
+using Nop.Web.Framework.Validators;
+using FluentValidation.Results;
 
 namespace Nop.Plugin.Reports.CustomReports.Controllers.CustomerId
 {
@@ -125,8 +127,7 @@ namespace Nop.Plugin.Reports.CustomReports.Controllers.CustomerId
             if (string.IsNullOrWhiteSpace(email))
                 return BadRequest("Email cím nem lehet üres!");
 
-            var validator = new EmailValidator();
-            var validationResult = validator.Validate(email);
+            var validationResult = EmailValidator.Validate(email);
 
             if (!validationResult.IsValid)
             {
@@ -176,13 +177,35 @@ namespace Nop.Plugin.Reports.CustomReports.Controllers.CustomerId
     /// <summary>
     /// Egy e-mail cím validálására szolgáló segéd osztály a FluentValidation segítségével.
     /// </summary>
-    public class EmailValidator : AbstractValidator<string>
+    public class EmailValidator
     {
-        public EmailValidator()
+        public static ValidationResult Validate(string email)
         {
-            RuleFor(email => email)
-                .NotEmpty().WithMessage("Email nem lehet üres.") // Ha üres az email cím, akkor hibaüzenet
-                .EmailAddress().WithMessage("Helytelen email formátum."); // Ha helytelen email formátum, akkor hibaüzenet
+            var result = new ValidationResult();
+
+            if (string.IsNullOrWhiteSpace(email))
+            {
+                result.Errors.Add(new ValidationFailure("Email", "Az email nem lehet üres."));
+            }
+            else if (!IsValidEmail(email))
+            {
+                result.Errors.Add(new ValidationFailure("Email", "Helytelen email formátum."));
+            }
+
+            return result;
+        }
+
+        private static bool IsValidEmail(string email)
+        {
+            try
+            {
+                var addr = new System.Net.Mail.MailAddress(email);
+                return addr.Address == email;
+            }
+            catch
+            {
+                return false;
+            }
         }
     }
 }
